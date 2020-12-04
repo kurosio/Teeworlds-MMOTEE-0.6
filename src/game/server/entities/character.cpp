@@ -2402,44 +2402,7 @@ void CCharacter::Poison(int Count, int From)
 bool CCharacter::IsFrozen() const { return m_IsFrozen; }
 int CCharacter::GetInfWeaponID(int WID)
 {
-	if(WID == WEAPON_HAMMER)
-	{
-		switch(GetClass())
-		{
-			default: return INFWEAPON_HAMMER;
-		}
-	}
-	else if(WID == WEAPON_GUN)
-	{
-		switch(GetClass())
-		{
-			default: return INFWEAPON_GUN;
-		}
-		return INFWEAPON_GUN;
-	}
-	else if(WID == WEAPON_SHOTGUN)
-	{
-		switch(GetClass())
-		{
-			default: return INFWEAPON_SHOTGUN;
-		}
-	}
-	else if(WID == WEAPON_GRENADE)
-	{
-		switch(GetClass())
-		{
-			default: return INFWEAPON_GRENADE;
-		}
-	}
-	else if(WID == WEAPON_RIFLE)
-	{
-		switch(GetClass())
-		{
-			default: return INFWEAPON_RIFLE;
-		}
-	}
-	else if(WID == WEAPON_NINJA) return INFWEAPON_NINJA;
-	else return INFWEAPON_NONE;
+	return WID + 1;
 }
 
 void CCharacter::CreateDropItem(int ItemID, int Count, int HowID, int Enchant)

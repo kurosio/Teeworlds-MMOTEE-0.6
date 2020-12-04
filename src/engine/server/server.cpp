@@ -785,7 +785,7 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	pThis->m_aClients[ClientID].m_UserID = -1;
 	pThis->m_aClients[ClientID].m_ClanID = -1;
 	pThis->m_aClients[ClientID].m_Level = -1;
-	pThis->m_aClients[ClientID].m_Jail = -1;
+	pThis->m_aClients[ClientID].m_Jail = 0;
 	pThis->m_aClients[ClientID].m_Rel = -1;
 	pThis->m_aClients[ClientID].m_Exp = -1;
 	pThis->m_aClients[ClientID].m_Donate = -1;
@@ -2571,6 +2571,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;
@@ -2697,6 +2698,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;
@@ -2735,6 +2737,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;
@@ -2780,6 +2783,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;
@@ -2837,6 +2841,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;
@@ -2901,12 +2906,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
-			// Scheme - 
-			// if(item) -> Add item if succeses -> Got resoult delete item drop -> 
-			//
-			//
-			//
-			//
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;
@@ -2990,6 +2990,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;
@@ -3031,7 +3032,7 @@ int CServer::GetItemEnquip(int ClientID, int ItemType)
 	{
 		if(ItemType == m_stInv[ClientID][i].i_type)
 		{
-			if(m_stInv[ClientID][i].i_settings == true)
+			if(m_stInv[ClientID][i].i_settings == 1)
 			{
 				back = i;
 				break;
@@ -3104,6 +3105,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;
@@ -3219,7 +3221,8 @@ public:
 			}
 		}
 		catch (sql::SQLException &e)
-		{		
+		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;
@@ -3298,7 +3301,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
-			dbg_msg("infclass", "Fail in initializ clans");
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		
@@ -3433,9 +3436,9 @@ public:
 				else if(str_comp(m_sType.ClrStr(), "SpawnHouse") == 0)
 				{
 					m_pServer->m_stClan[m_ClanID].f_spawninhouse = (int)pSqlServer->GetResults()->getInt("SpawnHouse");
-					if(m_Need == PLUS) m_pServer->m_stClan[m_ClanID].f_spawninhouse += m_Price;
-					else m_pServer->m_stClan[m_ClanID].f_spawninhouse -= m_Price;
-
+					// if(m_Need == PLUS) m_pServer->m_stClan[m_ClanID].f_spawninhouse += m_Price; // what? xd
+					// else m_pServer->m_stClan[m_ClanID].f_spawninhouse -= m_Price;
+					m_pServer->m_stClan[m_ClanID].f_spawninhouse = (bool)m_Price;
 					VarGot = m_pServer->m_stClan[m_ClanID].f_spawninhouse;
 				}	
 				else if(str_comp(m_sType.ClrStr(), "ChairHouse") == 0)
@@ -3457,8 +3460,9 @@ public:
 			}	
 			return true;
 		}
-		catch (sql::SQLException &e)
+		catch(sql::SQLException& e)
 		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;
@@ -3552,6 +3556,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}		
 		return true;
@@ -3740,6 +3745,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;
@@ -4440,6 +4446,7 @@ public:
 		}
 		catch (sql::SQLException &e)
 		{
+			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
 		return true;

@@ -688,9 +688,9 @@ void CPlayer::Snap(int SnappingClient)
 			float getlv = ((m_Health*100.0)/m_HealthStart)-1;
 			switch(GetBotType())
 			{
-				default: str_format(pSendName, sizeof(pSendName), "%d:%s[%d\%]", AccData.Level, Server()->ClientName(m_ClientID), (int)getlv);	break;
+				default: str_format(pSendName, sizeof(pSendName), "%d:%s[%d%%]", AccData.Level, Server()->ClientName(m_ClientID), (int)getlv);	break;
 				case BOT_NPC:
-				case BOT_BOSSSLIME: str_format(pSendName, sizeof(pSendName), "%s[%d\%]", Server()->ClientName(m_ClientID), (int)getlv);	break;
+				case BOT_BOSSSLIME: str_format(pSendName, sizeof(pSendName), "%s[%d%%]", Server()->ClientName(m_ClientID), (int)getlv);	break;
 				case BOT_NPCW: str_format(pSendName, sizeof(pSendName), "%s", Server()->ClientName(m_ClientID));	break;
 			}
 			StrToInts(&pClientInfo->m_Name0, 4, pSendName);

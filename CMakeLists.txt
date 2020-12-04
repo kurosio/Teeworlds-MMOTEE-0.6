@@ -5,7 +5,7 @@ file(STRINGS src/game/version.h VERSION_LINE
   REGEX "^#define GAME_VERSION "
 )
 
-set(PROJECT_NAME "TeeworldsBase")
+set(PROJECT_NAME "Mmotee")
 if(VERSION_LINE MATCHES "\"([0-9]+)\\.([0-9]+)\\.([0-9]+)\"")
   set(VERSION_MAJOR ${CMAKE_MATCH_1})
   set(VERSION_MINOR ${CMAKE_MATCH_2})
@@ -742,7 +742,6 @@ set(CPACK_SOURCE_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION
 set(CPACK_SOURCE_FILES
   CMakeLists.txt
   README.md
-  autoexec_server.cfg
   cmake/
   datasrc/
   libraries/
@@ -775,7 +774,6 @@ set(CPACK_TARGETS
 set(CPACK_FILES
   license.txt
   storage.cfg
-  autoexec_server.cfg
   ${COPY_FILES}
 )
 if(TARGET_OS STREQUAL "windows")

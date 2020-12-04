@@ -41,7 +41,7 @@ CSqlServer::~CSqlServer()
 	}
 	catch (sql::SQLException &e)
 	{
-		dbg_msg("sql", "ERROR: No SQL connection");
+		dbg_msg("sql", "ERROR: %s", e.what());
 	}
 	UnLock();
 	lock_destroy(m_SqlLock);
