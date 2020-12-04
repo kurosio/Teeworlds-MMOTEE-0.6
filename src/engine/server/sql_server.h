@@ -1,4 +1,3 @@
-#ifdef CONF_SQL
 #ifndef ENGINE_SERVER_SQL_SERVER_H
 #define ENGINE_SERVER_SQL_SERVER_H
 
@@ -92,5 +91,4 @@ private:
 	LOCK m_SqlLock;
 };
 
-#endif
 #endif
