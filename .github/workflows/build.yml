@@ -40,11 +40,6 @@ jobs:
         cd release
         ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Release -Werror=dev -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
         ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target everything
-    - name: Test release
-      run: |
-        cd release
-        ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target run_tests
-        ./Mmotee-Server shutdown
     - name: Package
       run: |
         cd release
