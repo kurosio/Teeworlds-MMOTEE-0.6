@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12...3.19.1)
+if(CMAKE_VERSION VERSION_LESS 3.12)
+  cmake_policy(VERSION ${CMAKE_VERSION})
+endif()
 
 file(STRINGS src/game/version.h VERSION_LINE
   LIMIT_COUNT 1
@@ -18,23 +21,8 @@ else()
   message(FATAL_ERROR "Couldn't parse version from src/game/version.h")
 endif()
 
-if(POLICY CMP0017)
-  cmake_policy(SET CMP0017 NEW)
-endif()
-
-if(POLICY CMP0042)
-  cmake_policy(SET CMP0042 NEW)
-endif()
-
-if(POLICY CMP0048)
-  cmake_policy(SET CMP0048 NEW)
-  if(VERSION_PATCH STREQUAL "0")
-    project(${PROJECT_NAME} VERSION ${VERSION_MAJOR}.${VERSION_MINOR})
-  else()
-    project(${PROJECT_NAME} VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
-  endif()
-else()
-  project(${PROJECT_NAME})
+# Extra support for CMake pre-3.0
+if(NOT POLICY CMP0048)
   set(PROJECT_VERSION_MAJOR ${VERSION_MAJOR})
   set(PROJECT_VERSION_MINOR ${VERSION_MINOR})
   set(PROJECT_VERSION_PATCH ${VERSION_PATCH})
@@ -44,6 +32,8 @@ else()
     set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
   endif()
 endif()
+
+project(${PROJECT_NAME} VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 set(ORIGINAL_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 set(ORIGINAL_CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES})
