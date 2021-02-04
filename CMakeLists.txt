@@ -460,6 +460,15 @@ file(COPY ${COPY_FILES} DESTINATION .)
 ########################################################################
 # CODE GENERATION
 ########################################################################
+function(chash output_file)
+  add_custom_command(OUTPUT ${output_file}
+    COMMAND ${PYTHON_EXECUTABLE} scripts/cmd5.py ${ARGN}
+      > "${PROJECT_BINARY_DIR}/${output_file}"
+    DEPENDS scripts/cmd5.py ${ARGN}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  )
+endfunction()
+
 function(generate_source output_file script_parameter)
   add_custom_command(OUTPUT ${output_file}
     COMMAND ${PYTHON_EXECUTABLE} datasrc/compile.py ${script_parameter}
@@ -526,6 +535,13 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/game/generated/git_revision.
     ${GIT_REVISION_EXTRA_DEPS}
     scripts/git_revision.py
 )
+
+chash("src/game/generated/nethash.cpp"
+  "src/engine/shared/protocol.h"
+  "src/game/tuning.h"
+  "src/game/gamecore.cpp"
+  "${PROJECT_BINARY_DIR}/src/game/generated/protocol.h"
+)
 generate_source("src/game/generated/protocol.cpp" "network_source")
 generate_source("src/game/generated/protocol.h" "network_header")
 generate_source("src/game/generated/server_data.cpp" "server_content_source")
@@ -540,12 +556,14 @@ file(GLOB ENGINE_INTERFACE "src/engine/*.h")
 file(GLOB ENGINE_SHARED "src/engine/shared/*.cpp" "src/engine/shared/*.h")
 file(GLOB GAME_SHARED "src/game/*.cpp" "src/game/*.h")
 
-set(ENGINE_GENERATED_SHARED
-  src/game/generated/protocol.cpp
+set(ENGINE_GENERATED_SHARED 
+  src/game/generated/nethash.cpp 
+  src/game/generated/protocol.cpp 
   src/game/generated/protocol.h
 )
 set(GAME_GENERATED_SHARED
   src/game/generated/git_revision.cpp
+  src/game/generated/nethash.cpp
   src/game/generated/protocol.h
 )
 

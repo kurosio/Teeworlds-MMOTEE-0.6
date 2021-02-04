@@ -1,5 +1,6 @@
 bam
 .bam
+/build/*
 /config.lua
 /datasrc/__pycache__
 /datasrc/*.pyc
