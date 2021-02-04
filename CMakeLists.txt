@@ -303,7 +303,7 @@ if(NOT CMAKE_CROSSCOMPILING)
   find_package(PkgConfig)
 endif()
 find_package(ZLIB)
-find_package(Crypto)
+find_package(OPENSSL)
 find_package(ICU)
 find_package(MySQL)
 find_package(PythonInterp 3)
@@ -392,6 +392,7 @@ set(COPY_FILES
   ${ICU_COPY_FILES}
   ${MYSQL_COPY_FILES}
   ${CURL_COPY_FILES}
+  ${OPENSSL_COPY_FILES}
   ${OPUSFILE_COPY_FILES}
 )
 file(COPY ${COPY_FILES} DESTINATION .)
