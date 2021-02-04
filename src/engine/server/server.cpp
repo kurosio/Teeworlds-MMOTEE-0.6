@@ -166,7 +166,7 @@ void CServerBan::InitServerBan(IConsole *pConsole, IStorage *pStorage, CServer* 
 }
 
 template<class T>
-int CServerBan::BanExt(T *pBanPool, const typename T::CDataType *pData, int Seconds, const char *pReason)
+int CServerBan::BanExt(T* pBanPool, const typename T::CDataType* pData, int Seconds, const char* pReason)
 {
 	// validate address
 	if(Server()->m_RconClientID >= 0 && Server()->m_RconClientID < MAX_CLIENTS &&
@@ -197,7 +197,7 @@ int CServerBan::BanExt(T *pBanPool, const typename T::CDataType *pData, int Seco
 			if(Server()->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY)
 				continue;
 
-			if(Server()->m_aClients[i].m_Authed != CServer::AUTHED_NO && NetMatch(pData, Server()->m_NetServer.ClientAddr(i)))
+			if(Server()->m_aClients[i].m_Authed != AUTHED_NO && NetMatch(pData, Server()->m_NetServer.ClientAddr(i)))
 			{
 				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban error (command denied)");
 				return -1;
@@ -210,15 +210,10 @@ int CServerBan::BanExt(T *pBanPool, const typename T::CDataType *pData, int Seco
 		return Result;
 
 	// drop banned clients
-
-	// don't drop it like that. just kick the desired guy
 	typename T::CDataType Data = *pData;
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(Server()->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY)
-			continue;
-
-		if(m_BanID != i) // don't drop it like that. just kick the desired guy
 			continue;
 
 		if(NetMatch(&Data, Server()->m_NetServer.ClientAddr(i)))
@@ -249,28 +244,23 @@ int CServerBan::BanRange(const CNetRange *pRange, int Seconds, const char *pReas
 
 bool CServerBan::ConBanExt(IConsole::IResult *pResult, void *pUser)
 {
-	CServerBan *pThis = static_cast<CServerBan*>(pUser);
+	CServerBan* pThis = static_cast<CServerBan*>(pUser);
 
-	const char *pStr = pResult->GetString(0);
-	int Minutes = pResult->NumArguments()>1 ? clamp(pResult->GetInteger(1), 0, 44640) : 30;
-	const char *pReason = pResult->NumArguments()>2 ? pResult->GetString(2) : "No reason given";
-	pThis->m_BanID = -1;
+	const char* pStr = pResult->GetString(0);
+	int Minutes = pResult->NumArguments() > 1 ? clamp(pResult->GetInteger(1), 0, 44640) : 30;
+	const char* pReason = pResult->NumArguments() > 2 ? pResult->GetString(2) : "No reason given";
 
-	if(StrAllnum(pStr))
+	if(str_isallnum(pStr))
 	{
 		int ClientID = str_toint(pStr);
 		if(ClientID < 0 || ClientID >= MAX_CLIENTS || pThis->Server()->m_aClients[ClientID].m_State == CServer::CClient::STATE_EMPTY)
 			pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban error (invalid client id)");
 		else
-		{
-			pThis->m_BanID = ClientID; //to ban the right guy, not his brother or so :P
-			if(pThis->BanAddr(pThis->Server()->m_NetServer.ClientAddr(ClientID), Minutes*60, pReason) != 0) //error occured
-				pThis->Server()->Kick(ClientID, pReason);
-		}
+			pThis->BanAddr(pThis->Server()->m_NetServer.ClientAddr(ClientID), Minutes * 60, pReason);
 	}
 	else
 		ConBan(pResult, pUser);
-	
+
 	return true;
 }
 
@@ -1662,24 +1652,15 @@ int CServer::Run()
 
 bool CServer::ConKick(IConsole::IResult *pResult, void *pUser)
 {
-	CServer* pThis = (CServer *)pUser;
-	
-	char aBuf[128];
-	const char *pStr = pResult->GetString(0);
-	const char *pReason = pResult->NumArguments()>1 ? pResult->GetString(1) : "No reason given";
-	str_format(aBuf, sizeof(aBuf), "Kicked (%s)", pReason);
-
-	if(CNetDatabase::StrAllnum(pStr))
+	if(pResult->NumArguments() > 1)
 	{
-		int ClientID = str_toint(pStr);
-		if(ClientID < 0 || ClientID >= MAX_CLIENTS || pThis->m_aClients[ClientID].m_State == CServer::CClient::STATE_EMPTY)
-			pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", "Invalid client id");
-		else
-			pThis->Kick(ClientID, aBuf);
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), "Kicked (%s)", pResult->GetString(1));
+		((CServer*)pUser)->Kick(pResult->GetInteger(0), aBuf);
 	}
 	else
-		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", "Invalid client id");
-	
+		((CServer*)pUser)->Kick(pResult->GetInteger(0), "Kicked by console");
+
 	return true;
 }
 
@@ -1727,8 +1708,8 @@ bool CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 					aBufName[c] = ' ';
 				aBufName[sizeof(aBufName)-1] = 0;
 				
-				int AuthLevel = pThis->m_aClients[i].m_Authed == CServer::AUTHED_ADMIN ? 2 :
-										pThis->m_aClients[i].m_Authed == CServer::AUTHED_MOD ? 1 : 0;
+				int AuthLevel = pThis->m_aClients[i].m_Authed == AUTHED_ADMIN ? 2 :
+										pThis->m_aClients[i].m_Authed == AUTHED_MOD ? 1 : 0;
 				
 				str_format(aBuf, sizeof(aBuf), "(#%02i) %s: [antispoof=%d] [login=%d] [level=%d] [ip=%s]",
 					i,
@@ -1816,7 +1797,7 @@ bool CServer::ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserDa
 		{
 			for(int i = 0; i < MAX_CLIENTS; ++i)
 			{
-				if(pThis->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY || pThis->m_aClients[i].m_Authed != CServer::AUTHED_MOD ||
+				if(pThis->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY || pThis->m_aClients[i].m_Authed != AUTHED_MOD ||
 					(pThis->m_aClients[i].m_pRconCmdToSend && str_comp(pResult->GetString(0), pThis->m_aClients[i].m_pRconCmdToSend->m_pName) >= 0))
 					continue;
 
