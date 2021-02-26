@@ -174,9 +174,6 @@ if(NOT MSVC)
   endif()
 
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wextra)
-  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-deprecated-copy)
-  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-ignored-qualifiers)
-  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-cast-function-type)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-unused-parameter)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-missing-field-initializers)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wformat=2) # Warn about format strings.
@@ -185,6 +182,10 @@ if(NOT MSVC)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wduplicated-branches)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wlogical-op)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wrestrict)
+  
+  add_c_compiler_flag_if_supported(OUR_FLAGS -Wno-deprecated-copy)
+  add_c_compiler_flag_if_supported(OUR_FLAGS -Wno-ignored-qualifiers)
+  add_c_compiler_flag_if_supported(OUR_FLAGS -Wno-cast-function-type)
   # TODO: Enable for C++ code except gtest
   #add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN "-Wuseless-cast")
 endif()
