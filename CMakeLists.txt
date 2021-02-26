@@ -183,9 +183,9 @@ if(NOT MSVC)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wlogical-op)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wrestrict)
   
-  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-deprecated-copy)
-  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-ignored-qualifiers)
-  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-cast-function-type)
+  add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-deprecated-copy)
+  add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-ignored-qualifiers)
+  add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-cast-function-type)
   # TODO: Enable for C++ code except gtest
   #add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN "-Wuseless-cast")
 endif()
