@@ -173,6 +173,8 @@ if(NOT MSVC)
     )
   endif()
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wextra)
+  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-deprecated-copy)
+  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-cast-function-type)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-unused-parameter)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-missing-field-initializers)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wformat=2) # Warn about format strings.
@@ -506,9 +508,6 @@ set(LIBS ${OPENSSL_CRYPTO_LIBRARY} ${ZLIB_LIBRARIES} ${PLATFORM_LIBS} ${CMAKE_TH
 add_library(engine-shared EXCLUDE_FROM_ALL OBJECT ${ENGINE_INTERFACE} ${ENGINE_GENERATED_SHARED} ${ENGINE_SHARED} ${BASE})
 add_library(game-shared EXCLUDE_FROM_ALL OBJECT ${GAME_SHARED} ${GAME_GENERATED_SHARED})
 target_compile_definitions(engine-shared PRIVATE SERVER_EXEC="${PROJECT_NAME}")
-if(MINGW OR TARGET_OS STREQUAL "linux") # Disable some warning
-  target_compile_options(engine-shared PUBLIC -Wno-cast-function-type -Wno-deprecated-copy)
-endif()
 list(APPEND TARGETS_OWN engine-shared game-shared)
 
 ########################################################################
