@@ -502,10 +502,13 @@ set(DEPS ${DEP_JSON} ${DEP_MD5} ${ZLIB_DEP})
 # Libraries
 set(LIBS ${OPENSSL_CRYPTO_LIBRARY} ${ZLIB_LIBRARIES} ${PLATFORM_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-# Targets
+# Targets  
 add_library(engine-shared EXCLUDE_FROM_ALL OBJECT ${ENGINE_INTERFACE} ${ENGINE_GENERATED_SHARED} ${ENGINE_SHARED} ${BASE})
 add_library(game-shared EXCLUDE_FROM_ALL OBJECT ${GAME_SHARED} ${GAME_GENERATED_SHARED})
 target_compile_definitions(engine-shared PRIVATE SERVER_EXEC="${PROJECT_NAME}")
+if(MINGW OR TARGET_OS STREQUAL "linux") # Disable some warning
+  target_compile_options(engine-shared PUBLIC -Wno-cast-function-type -Wno-deprecated-copy)
+endif()
 list(APPEND TARGETS_OWN engine-shared game-shared)
 
 ########################################################################
