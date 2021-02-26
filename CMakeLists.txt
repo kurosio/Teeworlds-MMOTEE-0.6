@@ -298,12 +298,11 @@ function(is_bundled VARIABLE PATH)
 endfunction()
 
 if(NOT CMAKE_CROSSCOMPILING)
-  # Check for PkgConfig once so all the other `find_package` calls can do it
-  # quietly.
+  # Check for PkgConfig once so all the other `find_package` calls can do it quietly.
   find_package(PkgConfig)
 endif()
 find_package(ZLIB)
-find_package(OPENSSL)
+find_package(OpenSSL)
 find_package(ICU)
 find_package(MySQL)
 find_package(PythonInterp 3)
@@ -343,15 +342,7 @@ endif()
 if(NOT(MYSQL_FOUND))
   message(SEND_ERROR "You must install MySQL to compile the ${PROJECT_NAME}")
 endif()
-
-if(NOT(OPENSSL_FOUND))
-  message(WARNING "########### WARNING OpenSSL not found! ####################")
-  message(WARNING "Download: https://slproweb.com/products/Win32OpenSSL.html")
-  message(WARNING "###########################################################")
-  message(SEND_ERROR "You must install OpenSSL to compile the ${PROJECT_NAME}")
-endif()
-
-if(SERVER AND NOT(ICU_FOUND))
+if(NOT(ICU_FOUND))
   message(SEND_ERROR "You must install ICU to compile Teeworlds")
 endif()
 
@@ -375,7 +366,6 @@ endif()
 ########################################################################
 set_src(DEP_JSON_SRC GLOB src/engine/external/json-parser json.c json.h)
 add_library(json EXCLUDE_FROM_ALL OBJECT ${DEP_JSON_SRC})
-
 set_src(DEP_MD5_SRC GLOB src/engine/external/md5 md5.c md5.h)
 add_library(md5 EXCLUDE_FROM_ALL OBJECT ${DEP_MD5_SRC})
 
@@ -510,14 +500,7 @@ set(GAME_GENERATED_SHARED
 set(DEPS ${DEP_JSON} ${DEP_MD5} ${ZLIB_DEP})
 
 # Libraries
-set(LIBS
-  ${OPENSSL_CRYPTO_LIBRARIES}
-  ${ZLIB_LIBRARIES}
-  ${PLATFORM_LIBS}
-  # Add pthreads (on non-Windows) at the end, so that other libraries can depend
-  # on it.
-  ${CMAKE_THREAD_LIBS_INIT}
-)
+set(LIBS ${OPENSSL_CRYPTO_LIBRARY} ${ZLIB_LIBRARIES} ${PLATFORM_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 # Targets
 add_library(engine-shared EXCLUDE_FROM_ALL OBJECT ${ENGINE_INTERFACE} ${ENGINE_GENERATED_SHARED} ${ENGINE_SHARED} ${BASE})
