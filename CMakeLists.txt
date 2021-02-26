@@ -172,16 +172,14 @@ if(NOT MSVC)
       -Wdeclaration-after-statement
     )
   endif()
+
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wextra)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-deprecated-copy)
+  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-ignored-qualifiers)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-cast-function-type)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-unused-parameter)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-missing-field-initializers)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wformat=2) # Warn about format strings.
-  # sry, discord sdk is broken somehow and throws this error on linux
-  if (NOT TARGET_OS STREQUAL "linux")
-    add_c_compiler_flag_if_supported(OUR_FLAGS_DEP -Wno-implicit-function-declaration)
-  endif()
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wno-nullability-completeness) # Mac OS build on github
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wduplicated-cond)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wduplicated-branches)
@@ -871,9 +869,6 @@ foreach(target ${TARGETS_OWN})
   endif()
   if(OUR_FLAGS_OWN)
     target_compile_options(${target} PRIVATE ${OUR_FLAGS_OWN})
-  endif()
-  if(MINGW OR TARGET_OS STREQUAL "linux") # Disable some warning
-    target_compile_options(${target} PRIVATE -Wno-cast-function-type -Wno-deprecated-copy)
   endif()
   target_include_directories(${target} PRIVATE ${PROJECT_BINARY_DIR}/src)
   target_include_directories(${target} PRIVATE src)
