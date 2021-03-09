@@ -1,11 +1,7 @@
 #ifndef ENGINE_SERVER_SQL_SERVER_H
 #define ENGINE_SERVER_SQL_SERVER_H
 
-#include <base/system.h>
-#include <mysql_connection.h>
-
 #include <cppconn/driver.h>
-#include <cppconn/exception.h>
 #include <cppconn/statement.h>
 
 enum
@@ -13,7 +9,7 @@ enum
 	//Never, never, never, ..., NEVER change these values
 	//otherwise, the statistics in the database will be corrupted
 	SQL_SCORETYPE_ROUND_SCORE=0,
-	
+
 	SQL_SCORETYPE_ENGINEER_SCORE=100,
 	SQL_SCORETYPE_SOLDIER_SCORE=101,
 	SQL_SCORETYPE_SCIENTIST_SCORE=102,
@@ -23,7 +19,7 @@ enum
 	SQL_SCORETYPE_SNIPER_SCORE=106,
 	SQL_SCORETYPE_HERO_SCORE=107,
 	SQL_SCORETYPE_BIOLOGIST_SCORE=108,
-	
+
 	SQL_SCORETYPE_SMOKER_SCORE=200,
 	SQL_SCORETYPE_HUNTER_SCORE=201,
 	SQL_SCORETYPE_BOOMER_SCORE=202,
@@ -33,7 +29,7 @@ enum
 	SQL_SCORETYPE_WITCH_SCORE=206,
 	SQL_SCORETYPE_GHOUL_SCORE=207,
 	SQL_SCORETYPE_SLUG_SCORE=208,
-	
+
 	SQL_SCORE_NUMROUND=32,
 };
 
@@ -57,17 +53,17 @@ public:
 	void executeSql(const char* pCommand);
 	void executeSqlQuery(const char* pQuery);
 
-	sql::ResultSet* GetResults() { return m_pResults; }
+	sql::ResultSet* GetResults() const { return m_pResults; }
 
-	const char* GetDatabase() { return m_aDatabase; }
-	const char* GetPrefix() { return m_aPrefix; }
-	const char* GetUser() { return m_aUser; }
-	const char* GetPass() { return m_aPass; }
-	const char* GetIP() { return m_aIp; }
-	int GetPort() { return m_Port; }
+	const char* GetDatabase() const { return m_aDatabase; }
+	const char* GetPrefix() const { return m_aPrefix; }
+	const char* GetUser() const { return m_aUser; }
+	const char* GetPass() const { return m_aPass; }
+	const char* GetIP() const { return m_aIp; }
+	int GetPort() const { return m_Port; }
 
-	void Lock() { lock_wait(m_SqlLock); }
-	void UnLock() { lock_unlock(m_SqlLock); }
+	void Lock() const { lock_wait(m_SqlLock); }
+	void UnLock() const { lock_unlock(m_SqlLock); }
 
 	static int ms_NumReadServer;
 	static int ms_NumWriteServer;

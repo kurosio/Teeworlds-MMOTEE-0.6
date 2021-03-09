@@ -1,7 +1,4 @@
 #include <base/system.h>
-#include <engine/shared/protocol.h>
-#include <engine/shared/config.h>
-
 #include "sql_server.h"
 
 
@@ -74,19 +71,13 @@ bool CSqlServer::Connect()
 		m_pConnection = 0;
 		m_pStatement = 0;
 
-		sql::ConnectOptionsMap connection_properties;
-		connection_properties["hostName"]      = sql::SQLString(m_aIp);
-		connection_properties["port"]          = 3306;
-		connection_properties["userName"]      = sql::SQLString(m_aUser);
-		connection_properties["password"]      = sql::SQLString(m_aPass);
-		connection_properties["OPT_CONNECT_TIMEOUT"] = 10;
-		connection_properties["OPT_READ_TIMEOUT"] = 10;
-		connection_properties["OPT_WRITE_TIMEOUT"] = 20;
-		connection_properties["OPT_RECONNECT"] = true;
-
 		// Create connection
 		m_pDriver = get_driver_instance();
-		m_pConnection = m_pDriver->connect(connection_properties);
+		m_pConnection = m_pDriver->connect(m_aIp, m_aUser, m_aPass);
+		m_pConnection->setClientOption("OPT_CONNECT_TIMEOUT", "10");
+		m_pConnection->setClientOption("OPT_READ_TIMEOUT", "10");
+		m_pConnection->setClientOption("OPT_WRITE_TIMEOUT", "20");
+		m_pConnection->setClientOption("OPT_RECONNECT", "1");
 
 		// Create Statement
 		m_pStatement = m_pConnection->createStatement();
