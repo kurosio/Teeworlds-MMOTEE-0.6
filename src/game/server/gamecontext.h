@@ -71,27 +71,27 @@ enum
 	AMAXHEALTH=400,
 	BMAXHEALTH=300,
 	HMAXHEALTH=500,
-	
+
 	AMAXDAMAGE=200,
 	BMAXDAMAGE=260,
 	HMAXDAMAGE=140,
-	
+
 	AMAXAREGEN=270,
 	BMAXAREGEN=300,
 	HMAXAREGEN=270,
-	
+
 	AMAXAMMO=80,
 	BMAXAMMO=70,
 	HMAXAMMO=100,
-	
+
 	AMAXHPREGEN=200,
 	BMAXHPREGEN=150,
 	HMAXHPREGEN=250,
-	
+
 	AMAXHANDLE=400,
 	BMAXHANDLE=350,
 	HMAXHANDLE=300,
-	
+
 	AMAXSPREED=30,
 	BMAXSPREED=30,
 	HMAXSPREED=30,
@@ -101,7 +101,7 @@ enum
 {
 	QUEST1=20,
 	QUEST2=40,
-	QUEST3=60,	
+	QUEST3=60,
 	QUEST4=80,
 	QUEST5=100,
 	QUEST6=120,
@@ -166,7 +166,7 @@ public:
 		VOTE_ENFORCE_NO,
 		VOTE_ENFORCE_YES,
 	};
-	
+
 	enum
 	{
 		MENUONLY,
@@ -185,7 +185,7 @@ public:
 	void CreateDeath(vec2 Pos, int Who);
 	void CreateSound(vec2 Pos, int Sound, int64_t Mask=-1);
 	void CreateSoundGlobal(int Sound, int Target=-1);
-	
+
 	// Голосования
 	void ClearVotes(int ClientID);
 	void AddVote(const char *Desc, const char *Cmd, int ClientID = -1);
@@ -263,10 +263,10 @@ public:
 
 	// Локализация текст
 	virtual void SendGuide(int ClientID, int BossType);
-	
+
 	virtual void SendMOTD(int To, const char* pParam);
 	virtual void SendMOTD_Localization(int To, const char* pText, ...);
-	
+
 	void AddBroadcast(int ClientID, const char* pText, int Priority, int LifeSpan);
 	virtual void SendBroadcast(int To, const char *pText, int Priority, int LifeSpan);
 	virtual void SendBroadcast_LStat(int To, int Priority, int LifeSpan, int Type, int Size = 0, int Size2 = 0);
@@ -275,7 +275,7 @@ public:
 	virtual void SendBroadcast_Localization(int To, int Priority, int LifeSpan, const char* pText, ...);
 	virtual void SendBroadcast_Localization_P(int To, int Priority, int LifeSpan, int Number, const char* pText, ...);
 	virtual void ClearBroadcast(int To, int Priority);
-	
+
 	virtual void AddVote_Localization(int To, const char* aCmd, const char* pText, ...);
 	virtual void AddVoteMenu_Localization(int To, int MenuID, int Type, const char* pText, ...);
 	virtual void AddNewCraftVote(int ClientID, const char *Need, int ItemID);
@@ -292,7 +292,7 @@ public:
 	void SendEmoticon(int ClientID, int Emoticon);
 	void SendWeaponPickup(int ClientID, int Weapon);
 	virtual void OnSetAuthed(int ClientID,int Level);
-	
+
 	void CheckPureTuning();
 	void SendTuningParams(int ClientID);
 
@@ -319,15 +319,15 @@ public:
 	virtual const char *GameType();
 	virtual const char *Version();
 	virtual const char *NetVersion();
-	
+
 public:
 	int m_ChatResponseTargetID;
 	int m_ChatPrintCBIndex;
 	int m_ZoneHandle_Damage;
 	int m_ZoneHandle_Teleport;
 	int m_ZoneHandle_Bonus;
-	int m_InviteClanID[MAX_NOBOT];
-	int m_InviteTick[MAX_NOBOT];
+	int m_InviteClanID[MAX_PLAYERS];
+	int m_InviteTick[MAX_PLAYERS];
 
 private:
 	bool PrivateMessage(const char* pStr, int ClientID, bool TeamChat);
@@ -336,10 +336,10 @@ private:
 	public:
 		int m_NoChangeTick;
 		char m_PrevMessage[1024];
-		
+
 		int m_Priority;
 		char m_NextMessage[1024];
-		
+
 		int m_LifeSpanTick;
 		int m_TimedPriority;
 		char m_TimedMessage[1024];

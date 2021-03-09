@@ -5,13 +5,13 @@
 #include <engine/shared/config.h>
 #include "player.h"
 #include <engine/shared/network.h>
-#include <game/server/entities/bots/monster.h> 
-#include <game/server/entities/bots/npcs.h> 
-#include <game/server/entities/bots/npcsw.h> 
-#include <game/server/entities/bots/kwah.h> 
-#include <game/server/entities/bots/boomer.h> 
-#include <game/server/entities/bots/bossslime.h> 
-#include <game/server/entities/bots/farmer.h> 
+#include <game/server/entities/bots/monster.h>
+#include <game/server/entities/bots/npcs.h>
+#include <game/server/entities/bots/npcsw.h>
+#include <game/server/entities/bots/kwah.h>
+#include <game/server/entities/bots/boomer.h>
+#include <game/server/entities/bots/bossslime.h>
+#include <game/server/entities/bots/farmer.h>
 
 MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
@@ -23,16 +23,16 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_RespawnTick = Server()->Tick();
 	m_DieTick = Server()->Tick();
 	m_ScoreStartTick = Server()->Tick();
-	
+
 	m_pCharacter = 0;
 	m_ClientID = ClientID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
 	m_SpectatorID = SPEC_FREEVIEW;
 	m_LastActionTick = Server()->Tick();
-	
-	m_Bot = (ClientID >= g_Config.m_SvMaxClients-MAX_BOTS);
+
+	m_Bot = (ClientID >= MAX_PLAYERS);
 	m_BotType = m_BotSubType = m_SelectItem = m_SelectArmor = -1;
-	
+
 	m_Authed = AUTHED_NO;
 	int *pIdMap = Server()->GetIdMap(m_ClientID);
 	for (int i = 1;i < VANILLA_MAX_CLIENTS;i++)
@@ -55,7 +55,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	AccData.Exp = AccData.Money = AccData.Rel = AccData.Gold = -1;
 	AccData.Class = PLAYERCLASS_NONE;
 
-	m_pChatCmd = new CCmd(this, m_pGameServer);	
+	m_pChatCmd = new CCmd(this, m_pGameServer);
 	SetLanguage(Server()->GetClientLanguage(ClientID));
 }
 
@@ -72,7 +72,7 @@ bool CPlayer::GetShop()
 {
 	if(m_pCharacter && m_pCharacter->InShop)
 		return true;
-	
+
 	return false;
 }
 
@@ -80,7 +80,7 @@ bool CPlayer::GetWork()
 {
 	if(m_pCharacter && m_pCharacter->InWork)
 		return true;
-	
+
 	return false;
 }
 
@@ -125,11 +125,11 @@ void CPlayer::RandomBoxTick()
 
 				int Get = 1;
 				GameServer()->GiveItem(m_ClientID, getitem, Get);
-				GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get {str:get} x{int:num2}"), 
-					"name", Server()->ClientName(m_ClientID), "used", Server()->GetItemName(m_ClientID, RANDOMCRAFTITEM, false), "num", &Get, "get", Server()->GetItemName(m_ClientID, getitem, false), "num2", &Get, NULL);	
-			
+				GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get {str:get} x{int:num2}"),
+					"name", Server()->ClientName(m_ClientID), "used", Server()->GetItemName(m_ClientID, RANDOMCRAFTITEM, false), "num", &Get, "get", Server()->GetItemName(m_ClientID, getitem, false), "num2", &Get, NULL);
+
 			}
-		}	
+		}
 	}
 	if(m_OpenBox && m_OpenBoxType == EVENTBOX)
 	{
@@ -153,11 +153,11 @@ void CPlayer::RandomBoxTick()
 
 				int Get = 1;
 				GameServer()->GiveItem(m_ClientID, getitem, Get);
-				GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get {str:get} x{int:num2}"), 
-					"name", Server()->ClientName(m_ClientID), "used", Server()->GetItemName(m_ClientID, EVENTBOX, false), "num", &Get, "get", Server()->GetItemName(m_ClientID, getitem, false), "num2", &Get, NULL);	
-			
+				GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get {str:get} x{int:num2}"),
+					"name", Server()->ClientName(m_ClientID), "used", Server()->GetItemName(m_ClientID, EVENTBOX, false), "num", &Get, "get", Server()->GetItemName(m_ClientID, getitem, false), "num2", &Get, NULL);
+
 			}
-		}	
+		}
 	}
 	if(m_OpenBox && m_OpenBoxType == FARMBOX)
 	{
@@ -198,11 +198,11 @@ void CPlayer::RandomBoxTick()
 					GameServer()->CreateDeath(m_pCharacter->m_Pos, m_ClientID);
 
 				GameServer()->GiveItem(m_ClientID, getitem, Get);
-				GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x1 and get {str:get} x{int:num2}"), 
-					"name", Server()->ClientName(m_ClientID), "used", Server()->GetItemName(m_ClientID, FARMBOX, false), "get", Server()->GetItemName(m_ClientID, getitem, false), "num2", &Get, NULL);	
-			
+				GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x1 and get {str:get} x{int:num2}"),
+					"name", Server()->ClientName(m_ClientID), "used", Server()->GetItemName(m_ClientID, FARMBOX, false), "get", Server()->GetItemName(m_ClientID, getitem, false), "num2", &Get, NULL);
+
 			}
-		}	
+		}
 	}
 	if(m_OpenBox)
 		m_OpenBox--;
@@ -225,8 +225,8 @@ void CPlayer::BasicAuthedTick()
 				if(sz-sz+10 >= sz-1)
 					tickstr = 90;
 			}
-			else 
-				SetMoveChar();		
+			else
+				SetMoveChar();
 		}
 	}
 
@@ -237,7 +237,7 @@ void CPlayer::BasicAuthedTick()
 	{
 		AccData.Gold += AccData.Money/10000;
 		int Got = (int)(AccData.Money/10000);
-		
+
 		AccData.Money -= Got*10000;
 	}
 
@@ -254,7 +254,7 @@ void CPlayer::BasicAuthedTick()
 		if(AccData.Level % 10 == 0)
 			GameServer()->SendMail(m_ClientID, "You got bonus every 10 level!", RANDOMCRAFTITEM, 3);
 		if(AccData.Level == 2)
-			GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("You have opened quest in vote quest."), NULL);		
+			GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("You have opened quest in vote quest."), NULL);
 		if(m_pCharacter)
 		{
 			GameServer()->CreateLolText(m_pCharacter, false, vec2(0,-75), vec2 (0,-1), 50, "Level ++");
@@ -279,9 +279,9 @@ void CPlayer::Tick()
 	{
 		AccData.Level = 1;
 		if(!Server()->GetSeccurity(m_ClientID))
-			GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("Your account is at risk, set security"), NULL);				
+			GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("Your account is at risk, set security"), NULL);
 	}
-	
+
 	if(!IsBot())
 	{
 		// Мана сучка ебал вас геи ебанные в рт вы шлюхи
@@ -298,39 +298,39 @@ void CPlayer::Tick()
 		// Снимаем ангру
 		if(m_AngryWroth && Server()->Tick() % (1 * Server()->TickSpeed() * 20) == 0)
 		{
-			if(m_AngryWroth < 20) 
+			if(m_AngryWroth < 20)
 				m_AngryWroth = 0;
-			else 
+			else
 				m_AngryWroth -= 20;
 		}
-		
+
 		// ОПЫТ КНИГИ ДОБАВКА НУЖНО ОПТИМИЗИРОВАТЬ
 		if(m_MoneyAdd)
 		{
 			m_MoneyAdd--;
-			if(Server()->Tick() % (1 * Server()->TickSpeed() * 120) == 0 && m_MoneyAdd > 1500)		
+			if(Server()->Tick() % (1 * Server()->TickSpeed() * 120) == 0 && m_MoneyAdd > 1500)
 			{
 				int Time = m_MoneyAdd/Server()->TickSpeed()/60;
-				GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("Item's ending {str:name} after {int:ends} min."), "name", Server()->GetItemName(m_ClientID, BOOKMONEYMIN), "ends", &Time, NULL);				
+				GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("Item's ending {str:name} after {int:ends} min."), "name", Server()->GetItemName(m_ClientID, BOOKMONEYMIN), "ends", &Time, NULL);
 			}
 			if(m_MoneyAdd == 1)
-				GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("Item's ending {str:name}"), "name", Server()->GetItemName(m_ClientID, BOOKMONEYMIN), NULL);				
+				GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("Item's ending {str:name}"), "name", Server()->GetItemName(m_ClientID, BOOKMONEYMIN), NULL);
 		}
 		if(m_ExperienceAdd)
 		{
 			m_ExperienceAdd--;
-			if(Server()->Tick() % (1 * Server()->TickSpeed() * 120) == 0 && m_ExperienceAdd > 1500)		
+			if(Server()->Tick() % (1 * Server()->TickSpeed() * 120) == 0 && m_ExperienceAdd > 1500)
 			{
 				int Time = m_ExperienceAdd/Server()->TickSpeed()/60;
-				GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("This item ending {str:name} after {int:ends} min."), "name", Server()->GetItemName(m_ClientID, BOOKEXPMIN), "ends", &Time, NULL);				
+				GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("This item ending {str:name} after {int:ends} min."), "name", Server()->GetItemName(m_ClientID, BOOKEXPMIN), "ends", &Time, NULL);
 			}
 			if(m_ExperienceAdd == 1)
-				GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("This item ending {str:name}"), "name", Server()->GetItemName(m_ClientID, BOOKEXPMIN), NULL);				
+				GameServer()->SendChatTarget_Localization(m_ClientID, CHATCATEGORY_DEFAULT, _("This item ending {str:name}"), "name", Server()->GetItemName(m_ClientID, BOOKEXPMIN), NULL);
 		}
-		
+
 		// Уровни и все такое повышение
 		if(Server()->IsClientLogged(m_ClientID) && GetTeam() != TEAM_SPECTATORS)
-		{		
+		{
 			if(g_Config.m_SvEventSchool)
 			{
 				if(Server()->Tick() % (1 * Server()->TickSpeed() * 600) == 0)
@@ -349,20 +349,20 @@ void CPlayer::Tick()
 					}
 
 					GameServer()->SendMail(m_ClientID, "Event Back to School you got item!", Type, 1);
-					GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("[Back to School] {str:name} got {str:item}."), "name", Server()->ClientName(m_ClientID), "item", Server()->GetItemName(m_ClientID, Type), NULL);					
+					GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("[Back to School] {str:name} got {str:item}."), "name", Server()->ClientName(m_ClientID), "item", Server()->GetItemName(m_ClientID, Type), NULL);
 
 					if(Server()->GetItemCount(m_ClientID, EVENTCUSTOMSOUL) >= 25)
 					{
 						Server()->RemItem(m_ClientID, EVENTCUSTOMSOUL, 25, -1);
 						GameServer()->SendMail(m_ClientID, "Soul automatic changes Custom Skin!", CUSTOMSKIN, 1);
-						GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("[Back to School] {str:name} Collect 25 Soul & get Custom Skin."), "name", Server()->ClientName(m_ClientID), NULL);					
+						GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("[Back to School] {str:name} Collect 25 Soul & get Custom Skin."), "name", Server()->ClientName(m_ClientID), NULL);
 					}
 				}
 			}
 			BasicAuthedTick();
 			RandomBoxTick();
 		}
-		
+
 		// Агресия и тюрьма
 		if(!m_Search && AccData.Rel >= 1000)
 		{
@@ -372,17 +372,17 @@ void CPlayer::Tick()
 		if(m_JailTick && AccData.Jail)
 		{
 			int Time = m_JailTick/Server()->TickSpeed();
-			GameServer()->SendBroadcast_Localization(m_ClientID, 100, 100, _("You in jail, wait {sec:siska}."), "siska", &Time, NULL);		
-			
+			GameServer()->SendBroadcast_Localization(m_ClientID, 100, 100, _("You in jail, wait {sec:siska}."), "siska", &Time, NULL);
+
 			m_JailTick--;
 			if(!m_JailTick)
 			{
 				m_JailTick = 0;
 				AccData.Jail = false;
-				
+
 				if(m_pCharacter)
 					m_pCharacter->Die(m_ClientID, WEAPON_WORLD);
-				
+
 				GameServer()->UpdateStats(m_ClientID);
 				GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_HEALER, _("The player {str:name}, leaves the prison"), "name", Server()->ClientName(m_ClientID), NULL);
 			}
@@ -392,54 +392,54 @@ void CPlayer::Tick()
 			AccData.Rel -= 100;
 			if(AccData.Rel < 0)
 				AccData.Rel = 0;
-			
+
 			if(AccData.Rel == 0 && m_Search)
 			{
 				m_Search = false;
 				GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_HEALER, _("Player {str:name}, crosed out in wanted list"), "name", Server()->ClientName(m_ClientID), NULL);
 			}
-			GameServer()->SendBroadcast_Localization(m_ClientID, BROADCAST_PRIORITY_GAMEANNOUNCE, BROADCAST_DURATION_GAMEANNOUNCE, _("Relations angry -100. Your {int:rel}"), "rel", &AccData.Rel, NULL);		
+			GameServer()->SendBroadcast_Localization(m_ClientID, BROADCAST_PRIORITY_GAMEANNOUNCE, BROADCAST_DURATION_GAMEANNOUNCE, _("Relations angry -100. Your {int:rel}"), "rel", &AccData.Rel, NULL);
 			GameServer()->UpdateStats(m_ClientID);
 		}
-		
+
 		// вывод текста АРЕНА
 		if(m_InArea)
 		{
 			if(GameServer()->m_AreaStartTick)
 			{
 				int Time = GameServer()->m_AreaStartTick/Server()->TickSpeed();
-				GameServer()->SendBroadcast_Localization(m_ClientID, 101, 100, _("Wait start area {int:siska} sec."), "siska", &Time, NULL);						
-					
+				GameServer()->SendBroadcast_Localization(m_ClientID, 101, 100, _("Wait start area {int:siska} sec."), "siska", &Time, NULL);
+
 				if(GameServer()->m_AreaStartTick == 100)
-					GameServer()->SendBroadcast_Localization(m_ClientID, 105, 100, _("Fight!!."), NULL);						
+					GameServer()->SendBroadcast_Localization(m_ClientID, 105, 100, _("Fight!!."), NULL);
 			}
 			else if(GameServer()->m_AreaEndGame)
 			{
 				int Time = GameServer()->m_AreaEndGame/Server()->TickSpeed();
 				int couns = GameServer()->GetAreaCount();
-				GameServer()->SendBroadcast_Localization(m_ClientID, 102, 100, _("End area {int:siska} sec. Life {int:num} player's"), "siska", &Time, "num", &couns, NULL);								
-			}		
+				GameServer()->SendBroadcast_Localization(m_ClientID, 102, 100, _("End area {int:siska} sec. Life {int:num} player's"), "siska", &Time, "num", &couns, NULL);
+			}
 		}
-		
+
 		// вывод текста по поводу ожидания времени босса
 		if(m_InBossed)
-		{	
+		{
 			if(GameServer()->m_WinWaitBoss)
 			{
 				int Time = GameServer()->m_WinWaitBoss/Server()->TickSpeed();
-				GameServer()->SendBroadcast_Localization(m_ClientID, 101, 100, _("Wait players for pick item's {int:siska} sec."), "siska", &Time, NULL);						
+				GameServer()->SendBroadcast_Localization(m_ClientID, 101, 100, _("Wait players for pick item's {int:siska} sec."), "siska", &Time, NULL);
 			}
 			else if(GameServer()->m_BossStartTick > 10*Server()->TickSpeed())
 			{
 				int Time = GameServer()->m_BossStartTick/Server()->TickSpeed();
-				GameServer()->SendBroadcast_Localization(m_ClientID, 101, 100, _("Wait players for raid {sec:siska}. Boss: {str:name}"), "siska", &Time, "name", GameServer()->GetBossName(GameServer()->m_BossType), NULL);		
+				GameServer()->SendBroadcast_Localization(m_ClientID, 101, 100, _("Wait players for raid {sec:siska}. Boss: {str:name}"), "siska", &Time, "name", GameServer()->GetBossName(GameServer()->m_BossType), NULL);
 			}
 			else if(Server()->Tick() % (1 * Server()->TickSpeed()) == 0 && GameServer()->m_BossStartTick > 100)
 				GameServer()->SendGuide(m_ClientID, GameServer()->m_BossType);
 			else if(GameServer()->m_BossStart)
 				GameServer()->SendBroadcast_LBossed(m_ClientID, 250, 100);
 		}
-		
+
 		// таймер синхронизации
 		if(m_LoginSync)
 		{
@@ -450,14 +450,14 @@ void CPlayer::Tick()
 				{
 					if(Server()->GetClanID(m_ClientID) > 0)
 						Server()->UpdClanCount(Server()->GetClanID(m_ClientID));
-						
+
 					GameServer()->ResetVotes(m_ClientID, AUTH);
 				}
 			}
 		}
 		if(!Server()->IsClientLogged(m_ClientID))
 			m_Team = -1;
-			
+
 		if(m_MapMenu > 0)
 			m_MapMenuTick++;
 	}
@@ -599,7 +599,7 @@ void CPlayer::MoneyAdd(int Size, bool ClanBonus, bool MoneyDouble)
 	int GetMoney = Size;
 	if(ClanBonus && Server()->GetClanID(m_ClientID))
 		GetMoney = (Size+Server()->GetClan(DADDMONEY, Server()->GetClanID(m_ClientID))*100);
-	
+
 	if(MoneyDouble)
 	{
 		if(Server()->GetItemSettings(m_ClientID, X2MONEYEXPVIP))
@@ -612,13 +612,13 @@ void CPlayer::MoneyAdd(int Size, bool ClanBonus, bool MoneyDouble)
 	{
 		AccData.Gold += Size/10000;
 		int Got = (int)(Size/10000);
-		
+
 		AccData.Money -= Got*10000;
 	}
 
 	GameServer()->SendBroadcast_LStat(m_ClientID, BROADCAST_PRIORITY_GAMEANNOUNCE, 100, INADDMONEY, GetMoney);
 	AccData.Money += GetMoney;
-	if(rand()%8 == 1) 
+	if(rand()%8 == 1)
 		GameServer()->UpdateStats(m_ClientID);
 
 	GameServer()->ResetVotes(m_ClientID, AUTH);
@@ -629,21 +629,21 @@ void CPlayer::ExpAdd(int Size, bool Bonus)
 {
 	if(IsBot())
 		return;
-	
+
 	int GetExp = Size, Get = 0;
 	if(Bonus && Server()->GetClanID(m_ClientID))
 	{
 		Get = Size*50;
 		Server()->InitClanID(Server()->GetClanID(m_ClientID), PLUS, "Exp", Get, true);
 		GetExp = Size+Server()->GetClan(DADDEXP, Server()->GetClanID(m_ClientID));
-	}	
+	}
 
 	if(Bonus && m_ExperienceAdd)
 		GetExp = GetExp*2;
 	if(Server()->GetItemSettings(m_ClientID, X2MONEYEXPVIP))
 		GetExp = GetExp*((Server()->GetItemCount(m_ClientID, X2MONEYEXPVIP))*2);
 
-	if(Server()->GetClanID(m_ClientID) && 
+	if(Server()->GetClanID(m_ClientID) &&
 		Server()->GetClan(DEXP, Server()->GetClanID(m_ClientID)) >= Server()->GetClan(DLEVEL, Server()->GetClanID(m_ClientID))*GetNeedForUpClan())
 	{
 		GameServer()->SendChatClan(Server()->GetClanID(m_ClientID), "[Clan Level UP] Great!");
@@ -655,7 +655,7 @@ void CPlayer::ExpAdd(int Size, bool Bonus)
 
 	GameServer()->SendBroadcast_LStat(m_ClientID, BROADCAST_PRIORITY_GAMEANNOUNCE, 100, Server()->GetClanID(m_ClientID) > 0 ? INADDCEXP : INADDEXP, GetExp, Get);
 	AccData.Exp += GetExp;
-	if(rand()%8 == 1) 
+	if(rand()%8 == 1)
 		GameServer()->UpdateStats(m_ClientID);
 
 	return;
@@ -681,10 +681,10 @@ void CPlayer::Snap(int SnappingClient)
 		char pSendName[32];
 		str_format(pSendName, sizeof(pSendName), "%d:%s", AccData.Level, Server()->ClientName(m_ClientID));
 		StrToInts(&pClientInfo->m_Name0, 4, pSendName);
-		
+
 		if(IsBot() && m_pCharacter)
 		{
-			
+
 			float getlv = ((m_Health*100.0)/m_HealthStart)-1;
 			switch(GetBotType())
 			{
@@ -701,7 +701,7 @@ void CPlayer::Snap(int SnappingClient)
 
 	if(Server()->IsClientLogged(m_ClientID) && tickstr) StrToInts(&pClientInfo->m_Clan0, 3, pTitle);
 	else StrToInts(&pClientInfo->m_Clan0, 3, Server()->ClientClan(m_ClientID));
-		
+
 	pClientInfo->m_Country = Server()->ClientCountry(m_ClientID);
 
 	StrToInts(&pClientInfo->m_Skin0, 6, m_TeeInfos.m_SkinName);
@@ -716,10 +716,10 @@ void CPlayer::Snap(int SnappingClient)
 	pPlayerInfo->m_Latency = SnappingClient == -1 ? m_Latency.m_Min : GameServer()->m_apPlayers[SnappingClient]->m_aActLatency[m_ClientID];
 	pPlayerInfo->m_Local = 0;
 	pPlayerInfo->m_ClientID = id;
-	
+
 	if(GetBotType() == BOT_BOSSSLIME || !IsBot()) pPlayerInfo->m_Score = AccData.Level;
 	else pPlayerInfo->m_Score = 0;
-		
+
 	if(!IsBot()) pPlayerInfo->m_Team = m_Team;
 	else pPlayerInfo->m_Team = 10;
 
@@ -762,7 +762,7 @@ void CPlayer::OnDisconnect(const char *pReason)
 	GameServer()->ClearVotes(m_ClientID);
 	KillCharacter();
 
-	if(Server()->ClientIngame(m_ClientID))	
+	if(Server()->ClientIngame(m_ClientID))
 		GameServer()->SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:PlayerName} has left the game {str:Reason}"), "PlayerName", Server()->ClientName(m_ClientID), NULL);
 }
 
@@ -824,7 +824,7 @@ void CPlayer::KillCharacter(int Weapon)
 	{
 		if(m_ClientID != 63)
 			m_pCharacter->Die(m_ClientID, Weapon);
-			
+
 		delete m_pCharacter;
 		m_pCharacter = 0;
 	}
@@ -842,13 +842,13 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 	Team = GameServer()->m_pController->ClampTeam(Team);
 	if(DoChatMsg)
 		GameServer()->SendChatTarget_Localization(-1, -1, _("{str:PlayerName} joined the RPG Azataz"), "PlayerName", Server()->ClientName(m_ClientID), NULL);
-	
+
 	KillCharacter();
 
 	m_Team = Team;
 	m_LastActionTick = Server()->Tick();
 	m_SpectatorID = SPEC_FREEVIEW;
-	
+
 	// we got to wait 0.5 secs before respawning
 	m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	GameServer()->m_pController->OnPlayerInfoChange(GameServer()->m_apPlayers[m_ClientID]);
@@ -861,7 +861,7 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_SpectatorID == m_ClientID)
 				GameServer()->m_apPlayers[i]->m_SpectatorID = SPEC_FREEVIEW;
 		}
-	}	
+	}
 }
 
 void CPlayer::TryRespawn()
@@ -871,23 +871,23 @@ void CPlayer::TryRespawn()
 		return;
 
 	m_Spawning = false;
-	
+
 	if (IsBot())
     {
 		// жирный бот рандом
 		if(rand()% 20 == 10) m_BigBot = true;
 		else m_BigBot = false;
-				
+
         GameServer()->UpdateBotInfo(m_ClientID);
 		if(m_BotType == BOT_L1MONSTER)
 		{
 			m_pCharacter = new(m_ClientID) CMonster(&GameServer()->m_World);
-			
+
 			if(g_Config.m_SvCityStart == 1)
 			{
 				AccData.Level = m_BigBot ? 280+rand()%3 : 250;
-				AccUpgrade.Health = 100+AccData.Level*2;		
-				AccUpgrade.Damage = AccData.Level+50;		
+				AccUpgrade.Health = 100+AccData.Level*2;
+				AccUpgrade.Damage = AccData.Level+50;
 			}
 			else
 			{
@@ -897,19 +897,19 @@ void CPlayer::TryRespawn()
 				{
 					Server()->SetMaxAmmo(m_ClientID, INFWEAPON_GUN, 10);
 					Server()->SetAmmoRegenTime(m_ClientID, INFWEAPON_GUN, 100);
-					Server()->SetFireDelay(m_ClientID, INFWEAPON_GUN, 800);					
+					Server()->SetFireDelay(m_ClientID, INFWEAPON_GUN, 800);
 				}
 			}
 		}
 		else if(m_BotType == BOT_L2MONSTER)
 		{
 			m_pCharacter = new(m_ClientID) CKwah(&GameServer()->m_World);
-			
+
 			if(g_Config.m_SvCityStart == 1)
 			{
 				AccData.Level = m_BigBot ? 370+rand()%3 : 350+rand()%3;
-				AccUpgrade.Health = 100+AccData.Level*2;		
-				AccUpgrade.Damage = AccData.Level+50;		
+				AccUpgrade.Health = 100+AccData.Level*2;
+				AccUpgrade.Damage = AccData.Level+50;
 			}
 			else
 			{
@@ -925,8 +925,8 @@ void CPlayer::TryRespawn()
 			if(g_Config.m_SvCityStart == 1)
 			{
 				AccData.Level = m_BigBot ? 510+rand()%3 : 490+rand()%15;
-				AccUpgrade.Health = 100+(int)(AccData.Level*2);		
-				AccUpgrade.Damage = (int)(AccData.Level+50);		
+				AccUpgrade.Health = 100+(int)(AccData.Level*2);
+				AccUpgrade.Damage = (int)(AccData.Level+50);
 			}
 			else
 			{
@@ -939,7 +939,7 @@ void CPlayer::TryRespawn()
 		{
 			m_pCharacter = new(m_ClientID) CBossSlime(&GameServer()->m_World);
 			AccData.Level = 1000+rand()%3;
-			
+
 			m_BigBot = true;
 
 			AccUpgrade.Health = (int)(AccData.Level/3);
@@ -962,7 +962,7 @@ void CPlayer::TryRespawn()
 			AccUpgrade.Damage = (int)(AccData.Level*5);
 			AccUpgrade.Health = (int)(AccData.Level*2);
 			m_BigBot = true;
-		}	
+		}
 		else if(m_BotType == BOT_FARMER)
 		{
 			m_pCharacter = new(m_ClientID) CNpcFarmer(&GameServer()->m_World);
@@ -979,7 +979,7 @@ void CPlayer::TryRespawn()
 	{
 		m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World);
 	}
-	
+
 	m_pCharacter->Spawn(this, SpawnPos);
 	if(GetClass() != PLAYERCLASS_NONE)
 		GameServer()->CreatePlayerSpawn(SpawnPos);
@@ -1013,13 +1013,13 @@ void CPlayer::SetClassSkin(int newClass, int State)
 }
 
 void CPlayer::SetClass(int newClass)
-{	
+{
 	if(AccData.Class == newClass)
 		return;
-	
+
 	AccData.Class = newClass;
 	SetClassSkin(newClass);
-	
+
 	if(m_pCharacter)
 		m_pCharacter->SetClass(newClass);
 }
@@ -1042,7 +1042,7 @@ const char* CPlayer::GetClassName()
 		return "Berserk";
 	else if(AccData.Class == PLAYERCLASS_HEALER)
 		return "Healer";
-	else 
+	else
 		return "You bitch";
 }
 
@@ -1084,11 +1084,11 @@ void CPlayer::ResetSkill(int ClientID)
 {
 	if(Server()->IsClientLogged(m_ClientID))
 	{
-		int Back = AccUpgrade.HammerRange*15 + AccUpgrade.Pasive2*15;	
+		int Back = AccUpgrade.HammerRange*15 + AccUpgrade.Pasive2*15;
 		AccUpgrade.Pasive2 = AccUpgrade.HammerRange = 0;
-		AccUpgrade.SkillPoint += Back;	
+		AccUpgrade.SkillPoint += Back;
 		GameServer()->UpdateUpgrades(ClientID);
-	}	
+	}
 }
 
 const char* CPlayer::TitleGot()
@@ -1114,19 +1114,19 @@ const char* CPlayer::TitleGot()
 	else if(Server()->GetItemSettings(m_ClientID, PIGPIG))
 		return "_Piggie_";
 	else if(Server()->GetItemSettings(m_ClientID, BIGCRAFT))
-		return "_Crafter_"; 
+		return "_Crafter_";
 	else if(Server()->GetItemSettings(m_ClientID, TITLESUMMER))
 		return "_I<3Summer";
 	else if(Server()->GetItemSettings(m_ClientID, TITLEENCHANT))
 		return "Enchant+10";
-	else 
+	else
 		return "_Newbie_";
-}   
- 
+}
+
 void CPlayer::SetMoveChar()
-{  
+{
 	char aBuf[64];
 	str_format(aBuf, sizeof(aBuf), "%s | %s", Server()->ClientClan(m_ClientID), TitleGot());
 	str_copy(pTitle, aBuf, sizeof(pTitle));
 	tickstr = 90;
-}  
+}

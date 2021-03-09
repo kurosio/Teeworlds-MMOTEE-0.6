@@ -46,7 +46,7 @@ bool CNpcFarmer::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 
 void CNpcFarmer::PlaySound()
 {
-	GameServer()->SendEmoticon(m_pPlayer->GetCID(), 4);			
+	GameServer()->SendEmoticon(m_pPlayer->GetCID(), 4);
 	GameServer()->CreateSound(m_Pos, SOUND_TEE_CRY);
 }
 
@@ -79,7 +79,7 @@ void CNpcFarmer::TickBotAI()
         PlaySound();
         m_BotTimeLastSound = Server()->Tick();
     }
-    
+
     EmoteNormal = EMOTE_HAPPY;
 
     // ОЧИСТКА ДЕЙСТВИЙ
@@ -96,13 +96,13 @@ void CNpcFarmer::TickBotAI()
     bool PlayerNFound = false;
     float LessDist = 500.0f;
     m_BotClientIDFix = -1;
-    
+
 	if (Server()->Tick() % (1 * Server()->TickSpeed() * 4) == 0)
 	{
 		GameServer()->SendEmoticon(m_pPlayer->GetCID(), 2);
     }
-    
-	for (int i=0; i<g_Config.m_SvMaxClients-MAX_BOTS; i++)
+
+	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
 		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
 		if (!pPlayer || !pPlayer->GetCharacter() || (pPlayer->IsBot() && pPlayer->GetBotType() == BOT_NPC))
@@ -113,19 +113,19 @@ void CNpcFarmer::TickBotAI()
 			LessDist = Dist;
 		else
 			continue;
-		
+
 		if (Dist < 400.0f)
 		{
 			int Collide = GameServer()->Collision()->IntersectLine(pPlayer->GetCharacter()->m_Pos, m_Pos, 0, 0);
 			if(g_Config.m_SvCityStart != 1 && Collide)
 				continue;
-			
+
 			if(Dist > 300.0f && pPlayer->GetCharacter()->InWork)
 			{
 				pPlayer->GetCharacter()->InWork = false;
 				GameServer()->ResetVotes(i, AUTH);
 			}
-			
+
 			if(Dist <= 300.0f && !pPlayer->GetCharacter()->InWork)
 			{
 				pPlayer->GetCharacter()->InWork = true;

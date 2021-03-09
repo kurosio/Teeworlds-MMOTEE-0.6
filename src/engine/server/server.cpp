@@ -269,7 +269,7 @@ void CServer::CClient::Reset(bool ResetScore)
 	// reset input
 	for(int i = 0; i < 200; i++)
 		m_aInputs[i].m_GameTick = -1;
-	
+
 	m_CurrentInput = 0;
 	mem_zero(&m_LatestInput, sizeof(m_LatestInput));
 
@@ -278,7 +278,7 @@ void CServer::CClient::Reset(bool ResetScore)
 	m_LastInputTick = -1;
 	m_SnapRate = CClient::SNAPRATE_INIT;
 	m_NextMapChunk = 0;
-	
+
 	if(ResetScore)
 	{
 		m_WaitingTime = 0;
@@ -308,7 +308,7 @@ CServer::CServer()
 
 	m_RconClientID = IServer::RCON_CID_SERV;
 	m_RconAuthLevel = AUTHED_ADMIN;
- 
+
 	for (int i = 0; i < MAX_SQLSERVERS; i++)
 	{
 		m_apSqlReadServers[i] = 0;
@@ -317,9 +317,9 @@ CServer::CServer()
 
 	CSqlConnector::SetReadServers(m_apSqlReadServers);
 	CSqlConnector::SetWriteServers(m_apSqlWriteServers);
-	
+
 	m_GameServerCmdLock = lock_create();
-	
+
 	Init();
 }
 
@@ -340,7 +340,7 @@ int CServer::TrySetClientName(int ClientID, const char *pName)
 	// check for empty names
 	if(!aTrimmedName[0])
 		return -1;
-		
+
 	// name not allowed to start with '/'
 	if(aTrimmedName[0] == '/')
 		return -1;
@@ -348,13 +348,13 @@ int CServer::TrySetClientName(int ClientID, const char *pName)
 	pName = aTrimmedName;
 
 	// make sure that two clients doesn't have the same name
-	for(int i = 0; i < MAX_NOBOT; i++)
+	for(int i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(i != ClientID && m_aClients[i].m_State >= CClient::STATE_READY)
 		{
 			str_copy(aTrimmedName2, ClientName(i), sizeof(aTrimmedName2));
 			StrRtrim(aTrimmedName2);
-			
+
 			if(str_comp(pName, aTrimmedName2) == 0)
 				return -1;
 		}
@@ -363,7 +363,7 @@ int CServer::TrySetClientName(int ClientID, const char *pName)
 	// check if new and old name are the same
 	if(m_aClients[ClientID].m_aName[0] && str_comp(m_aClients[ClientID].m_aName, pName) == 0)
 		return 0;
-	
+
 	// set the client name
 	str_copy(m_aClients[ClientID].m_aName, pName, MAX_NAME_LENGTH);
 	return 0;
@@ -490,11 +490,11 @@ const char *CServer::ClientName(int ClientID)
 {
 	if(ClientID < 0 || ClientID >= MAX_CLIENTS || m_aClients[ClientID].m_State == CServer::CClient::STATE_EMPTY)
 		return "(invalid)";
-		
+
 	if(m_aClients[ClientID].m_State == CServer::CClient::STATE_INGAME)
 	{
 		if(ClientID < MAX_CLIENTS)
-		{			
+		{
 			remove_spaces(m_aClients[ClientID].m_aName);
 			return m_aClients[ClientID].m_aName;
 		}
@@ -508,9 +508,9 @@ const char *CServer::ClientName(int ClientID)
 
 const char *CServer::ClientUsername(int ClientID)
 {
-	if(ClientID < 0 || ClientID >= MAX_NOBOT || m_aClients[ClientID].m_State == CServer::CClient::STATE_EMPTY || !IsClientLogged(ClientID))
+	if(ClientID < 0 || ClientID >= MAX_PLAYERS || m_aClients[ClientID].m_State == CServer::CClient::STATE_EMPTY || !IsClientLogged(ClientID))
 		return "(invalid)";
-		
+
 	if(m_aClients[ClientID].m_State == CServer::CClient::STATE_INGAME)
 		return m_aClients[ClientID].m_aUsername;
 	else
@@ -532,7 +532,7 @@ const char *CServer::ClientClan(int ClientID)
 
 const char *CServer::GetSelectName(int ClientID, int SelID)
 {
-	if(ClientID < 0 || ClientID >= MAX_NOBOT || m_aClients[ClientID].m_State == CServer::CClient::STATE_EMPTY)
+	if(ClientID < 0 || ClientID >= MAX_PLAYERS || m_aClients[ClientID].m_State == CServer::CClient::STATE_EMPTY)
 		return "";
 	if(m_aClients[ClientID].m_State == CServer::CClient::STATE_INGAME)
 		return m_aClients[ClientID].m_SelectPlayer[SelID];
@@ -735,7 +735,7 @@ int CServer::NewClientCallback(int ClientID, void *pUser)
 	pThis->m_aClients[ClientID].m_pRconCmdToSend = 0;
 	pThis->m_aClients[ClientID].m_CustClt = 0;
 	pThis->m_aClients[ClientID].Reset();
-	
+
 	return 0;
 }
 
@@ -756,7 +756,7 @@ int CServer::ClientRejoinCallback(int ClientID, void *pUser)
 int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 {
 	CServer *pThis = (CServer *)pUser;
-	
+
 	// notify the mod about the drop
 	if(pThis->m_aClients[ClientID].m_State >= CClient::STATE_READY)
 		pThis->GameServer()->OnClientDrop(ClientID, pReason);
@@ -796,7 +796,7 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	pThis->m_aClients[ClientID].m_Pasive2 = 0;
 	pThis->m_aClients[ClientID].Upgrade = 0;
 	pThis->m_aClients[ClientID].SkillPoint = 0;
-	
+
 	for(int i = 0; i < 7; i++)
 		pThis->m_aClients[ClientID].m_ItemCount[i] = 0;
 
@@ -812,13 +812,13 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 		pThis->m_stInv[ClientID][i].i_settings = 0;
 		pThis->m_stInv[ClientID][i].i_nlevel = 0;
 		pThis->m_stInv[ClientID][i].i_nprice = 0;
-	}	
+	}
 
 	pThis->m_aClients[ClientID].m_LogInstance = -1;
 	pThis->m_aClients[ClientID].m_Snapshots.PurgeAll();
 
 	return 0;
-	
+
 }
 
 void CServer::Logout(int ClientID)
@@ -842,17 +842,17 @@ void CServer::SendMapData(int ClientID, int Chunk)
  	unsigned int ChunkSize = 1024-128;
  	unsigned int Offset = Chunk * ChunkSize;
  	int Last = 0;
- 
+
  	// drop faulty map data requests
  	if(Chunk < 0 || Offset > m_CurrentMapSize)
  		return;
- 
+
  	if(Offset+ChunkSize >= m_CurrentMapSize)
  	{
  		ChunkSize = m_CurrentMapSize-Offset;
  		Last = 1;
  	}
- 
+
  	CMsgPacker Msg(NETMSG_MAP_DATA);
  	Msg.AddInt(Last);
  	Msg.AddInt(m_CurrentMapCrc);
@@ -860,7 +860,7 @@ void CServer::SendMapData(int ClientID, int Chunk)
  	Msg.AddInt(ChunkSize);
  	Msg.AddRaw(&m_pCurrentMapData[Offset], ChunkSize);
  	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
- 
+
  	if(g_Config.m_Debug)
  	{
  		char aBuf[256];
@@ -944,7 +944,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 
 	if(Unpacker.Error())
 		return;
-	
+
 	if(Sys)
 	{
 		// system message
@@ -1001,7 +1001,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				char aAddrStr[NETADDR_MAXSTRSIZE];
 				net_addr_str(m_NetServer.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
-				
+
 				m_aClients[ClientID].m_State = CClient::STATE_READY;
 				GameServer()->OnClientConnected(ClientID);
 			}
@@ -1094,7 +1094,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 						break;
 					default:
 						Console()->SetAccessLevel(IConsole::ACCESS_LEVEL_USER);
-				}	
+				}
 				Console()->ExecuteLineFlag(pCmd, ClientID, false, CFGFLAG_SERVER);
 				Console()->SetAccessLevel(IConsole::ACCESS_LEVEL_ADMIN);
 				m_RconClientID = IServer::RCON_CID_SERV;
@@ -1126,7 +1126,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					if(Unpacker.Error() == 0 && SendRconCmds)
 						m_aClients[ClientID].m_pRconCmdToSend = Console()->FirstCommandInfo(IConsole::ACCESS_LEVEL_ADMIN, CFGFLAG_SERVER);
 					SendRconLine(ClientID, "Admin authentication successful. Full remote console access granted.");
-					
+
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "ClientID=%d authed (admin)", ClientID);
 					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
@@ -1210,7 +1210,7 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token, bool Extended, int
 
 	// count the players
 	int PlayerCount = 0, ClientCount = 0;
-	for(int i = 0; i < MAX_NOBOT; i++)
+	for(int i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
@@ -1228,7 +1228,7 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token, bool Extended, int
 	p.AddString(aBuf, 6);
 
 	p.AddString(GameServer()->Version(), 32);
-	
+
 	if (Extended)
 	{
 		p.AddString(g_Config.m_SvName, 256);
@@ -1240,7 +1240,7 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token, bool Extended, int
 		}
 		else
 		{
-			str_format(aBuf, sizeof(aBuf), "%s [%d/%d]", g_Config.m_SvName, ClientCount, MAX_NOBOT);
+			str_format(aBuf, sizeof(aBuf), "%s [%d/%d]", g_Config.m_SvName, ClientCount, MAX_PLAYERS);
 			p.AddString(aBuf, 64);
 		}
 	}
@@ -1256,7 +1256,7 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token, bool Extended, int
 	str_format(aBuf, sizeof(aBuf), "%d", i);
 	p.AddString(aBuf, 2);
 
-	int MaxClients = MAX_NOBOT;
+	int MaxClients = MAX_PLAYERS;
 	if (!Extended)
 	{
 		if (ClientCount >= VANILLA_MAX_CLIENTS)
@@ -1266,7 +1266,7 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token, bool Extended, int
 			else
 				ClientCount = VANILLA_MAX_CLIENTS;
 		}
-		if (MaxClients > VANILLA_MAX_CLIENTS) 
+		if (MaxClients > VANILLA_MAX_CLIENTS)
 			MaxClients = VANILLA_MAX_CLIENTS;
 	}
 
@@ -1285,7 +1285,7 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token, bool Extended, int
 	int Skip = Offset;
 	int Take = ClientsPerPacket;
 
-	for(i = 0; i < MAX_NOBOT; i++)
+	for(i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
@@ -1316,7 +1316,7 @@ void CServer::SendServerInfo(const NETADDR *pAddr, int Token, bool Extended, int
 
 void CServer::UpdateServerInfo()
 {
-	for(int i = 0; i < MAX_NOBOT; ++i)
+	for(int i = 0; i < MAX_PLAYERS; ++i)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 			SendServerInfo(m_NetServer.ClientAddr(i), -1);
@@ -1390,14 +1390,14 @@ int CServer::LoadMap(const char *pMapName)
 		dfServerMap.Open(Storage(), aBuf, IStorage::TYPE_ALL);
 		unsigned ServerMapCrc = dfServerMap.Crc();
 		dfServerMap.Close();
-		
+
 		char aClientMapName[256];
 		str_format(aClientMapName, sizeof(aClientMapName), "clientmaps/%s_%08x/tw06-highres.map", pMapName, ServerMapCrc);
-		
+
 		CMapConverter MapConverter(Storage(), m_pMap, Console());
 		if(!MapConverter.Load())
 			return 0;
-		
+
 		CDataFileReader dfClientMap;
 		//The map is already converted
 		if(dfClientMap.Open(Storage(), pMapName, IStorage::TYPE_ALL))
@@ -1410,31 +1410,31 @@ int CServer::LoadMap(const char *pMapName)
 		{
 			char aClientMapDir[256];
 			str_format(aClientMapDir, sizeof(aClientMapDir), "clientmaps/%s_%08x", pMapName, ServerMapCrc);
-			
+
 			char aFullPath[512];
 			Storage()->GetCompletePath(IStorage::TYPE_SAVE, aClientMapDir, aFullPath, sizeof(aFullPath));
 			if(fs_makedir(aFullPath) != 0)
 			{
 				dbg_msg("infclass", "Can't create the directory '%s'", aClientMapDir);
 			}
-				
+
 			if(!MapConverter.CreateMap(aClientMapName))
 				return 0;
-			
+
 			CDataFileReader dfGeneratedMap;
 			dfGeneratedMap.Open(Storage(), aClientMapName, IStorage::TYPE_ALL);
 			m_CurrentMapCrc = dfGeneratedMap.Crc();
 			dfGeneratedMap.Close();
 		}
-	
+
 		char aBufMsg[128];
 		str_format(aBufMsg, sizeof(aBufMsg), "map crc is %08x, generated map crc is %08x", ServerMapCrc, m_CurrentMapCrc);
 		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBufMsg);
-		
+
 		//Download the generated map in memory to send it to clients
 		IOHANDLE File = Storage()->OpenFile(aClientMapName, IOFLAG_READ, IStorage::TYPE_ALL);
 		m_CurrentMapSize = (int)io_length(File);
-		
+
 		free(m_pCurrentMapData);
 		m_pCurrentMapData = (unsigned char *)malloc(m_CurrentMapSize);
 		io_read(File, m_pCurrentMapData, m_CurrentMapSize);
@@ -1528,7 +1528,7 @@ int CServer::Run()
 				{
 					// new map loaded
 					GameServer()->OnShutdown();
-				
+
 					for(int ClientID = 0; ClientID < MAX_CLIENTS; ClientID++)
 					{
 						if(m_aClients[ClientID].m_State <= CClient::STATE_AUTH)
@@ -1574,7 +1574,7 @@ int CServer::Run()
 				}
 
 				GameServer()->OnTick();
-				
+
 				if(m_lGameServerCmds.size())
 				{
 					lock_wait(m_GameServerCmdLock);
@@ -1585,7 +1585,7 @@ int CServer::Run()
 					}
 					m_lGameServerCmds.clear();
 					lock_unlock(m_GameServerCmdLock);
-				} 
+				}
 			}
 
 			// snap game
@@ -1626,7 +1626,7 @@ int CServer::Run()
 				ReportTime += time_freq()*ReportInterval;
 		}
 	}
-	
+
 	// disconnect all clients on shutdown
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
@@ -1638,7 +1638,7 @@ int CServer::Run()
 	m_pMap->Unload();
 
 	free(m_pCurrentMapData);
-		
+
 	for (int i = 0; i < MAX_SQLSERVERS; i++)
 	{
 		if (m_apSqlReadServers[i])
@@ -1670,7 +1670,7 @@ bool CServer::ConOptionStatus(IConsole::IResult *pResult, void *pUser)
 	char aBuf[256];
 	CServer* pThis = static_cast<CServer *>(pUser);
 
-	for(int i = 0; i < MAX_NOBOT; i++)
+	for(int i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(pThis->m_aClients[i].m_State == CClient::STATE_INGAME)
 		{
@@ -1680,11 +1680,11 @@ bool CServer::ConOptionStatus(IConsole::IResult *pResult, void *pUser)
 				pThis->m_aClients[i].m_aLanguage,
 				pThis->GetClientAntiPing(i)
 			);
-			
+
 			pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
 		}
 	}
-	
+
 	return true;
 }
 
@@ -1694,23 +1694,23 @@ bool CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 	char aAddrStr[NETADDR_MAXSTRSIZE];
 	CServer* pThis = static_cast<CServer *>(pUser);
 
-	for(int i = 0; i < MAX_NOBOT; i++)
+	for(int i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(pThis->m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
 			net_addr_str(pThis->m_NetServer.ClientAddr(i), aAddrStr, sizeof(aAddrStr), true);
 			if(pThis->m_aClients[i].m_State == CClient::STATE_INGAME)
-			{				
+			{
 				//Add some padding to make the command more readable
 				char aBufName[18];
 				str_copy(aBufName, pThis->ClientName(i), sizeof(aBufName));
 				for(int c=str_length(aBufName); c<((int)sizeof(aBufName))-1; c++)
 					aBufName[c] = ' ';
 				aBufName[sizeof(aBufName)-1] = 0;
-				
+
 				int AuthLevel = pThis->m_aClients[i].m_Authed == AUTHED_ADMIN ? 2 :
 										pThis->m_aClients[i].m_Authed == AUTHED_MOD ? 1 : 0;
-				
+
 				str_format(aBuf, sizeof(aBuf), "(#%02i) %s: [antispoof=%d] [login=%d] [level=%d] [ip=%s]",
 					i,
 					aBufName,
@@ -1725,7 +1725,7 @@ bool CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 			pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
 		}
 	}
-	
+
 	return true;
 /* INFECTION MODIFICATION END *****************************************/
 }
@@ -1733,14 +1733,14 @@ bool CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 bool CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 {
 	((CServer *)pUser)->m_RunServer = 0;
-	
+
 	return true;
 }
 
 bool CServer::ConMapReload(IConsole::IResult *pResult, void *pUser)
 {
 	((CServer *)pUser)->m_MapReload = 1;
-	
+
 	return true;
 }
 
@@ -1761,7 +1761,7 @@ bool CServer::ConLogout(IConsole::IResult *pResult, void *pUser)
 		pServer->m_aClients[pServer->m_RconClientID].m_pRconCmdToSend = 0;
 		pServer->SendRconLine(pServer->m_RconClientID, "Logout successful.");
 	}
-	
+
 	return true;
 }
 
@@ -1770,7 +1770,7 @@ bool CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserD
 	pfnCallback(pResult, pCallbackUserData);
 	if(pResult->NumArguments())
 		((CServer *)pUserData)->UpdateServerInfo();
-	
+
 	return true;
 }
 
@@ -1779,7 +1779,7 @@ bool CServer::ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pU
 	pfnCallback(pResult, pCallbackUserData);
 	if(pResult->NumArguments())
 		((CServer *)pUserData)->m_NetServer.SetMaxClientsPerIP(pResult->GetInteger(0));
-	
+
 	return true;
 }
 
@@ -1810,7 +1810,7 @@ bool CServer::ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserDa
 	}
 	else
 		pfnCallback(pResult, pCallbackUserData);
-	
+
 	return true;
 }
 
@@ -1822,7 +1822,7 @@ bool CServer::ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void 
 		CServer *pThis = static_cast<CServer *>(pUserData);
 		pThis->Console()->SetPrintOutputLevel(pThis->m_PrintCBIndex, pResult->GetInteger(0));
 	}
-	
+
 	return true;
 }
 
@@ -1889,7 +1889,7 @@ bool CServer::ConDumpSqlServers(IConsole::IResult *pResult, void *pUserData)
 			str_format(aBuf, sizeof(aBuf), "SQL-%s %d: DB: '%s' Prefix: '%s' User: '%s' Pass: '%s' IP: '%s' Port: %d", ReadOnly ? "Read" : "Write", i, apSqlServers[i]->GetDatabase(), apSqlServers[i]->GetPrefix(), apSqlServers[i]->GetUser(), apSqlServers[i]->GetPass(), apSqlServers[i]->GetIP(), apSqlServers[i]->GetPort());
 			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		}
-	
+
 	return true;
 }
 
@@ -1915,7 +1915,7 @@ void CServer::RegisterCommands()
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
 	Console()->Chain("mod_command", ConchainModCommandUpdate, this);
 	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
-	
+
 	Console()->Register("inf_add_sqlserver", "ssssssi?i", CFGFLAG_SERVER, ConAddSqlServer, this, "add a sqlserver");
 	Console()->Register("inf_list_sqlservers", "s", CFGFLAG_SERVER, ConDumpSqlServers, this, "list all sqlservers readservers = r, writeservers = w");
 
@@ -1979,7 +1979,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
 	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_SERVER, argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
-	
+
 	pServer->m_pLocalization = new CLocalization(pStorage);
 	pServer->m_pLocalization->InitConfig(0, NULL);
 	if(!pServer->m_pLocalization->Init())
@@ -1987,7 +1987,7 @@ int main(int argc, const char **argv) // ignore_convention
 		dbg_msg("localization", "could not initialize localization");
 		return -1;
 	}
-	
+
 	pServer->InitRegister(&pServer->m_NetServer, pEngineMasterServer, pConsole);
 
 	{
@@ -2007,7 +2007,7 @@ int main(int argc, const char **argv) // ignore_convention
 		if(RegisterFail)
 			return -1;
 	}
-	
+
 	pEngine->Init();
 	pConfig->Init();
 	pEngineMasterServer->Init();
@@ -2031,9 +2031,9 @@ int main(int argc, const char **argv) // ignore_convention
 	// run the server
 	dbg_msg("server", "starting...");
 	pServer->Run();
-	
+
 	delete pServer->m_pLocalization;
-	
+
 	// free
 	delete pServer;
 	delete pKernel;
@@ -2124,7 +2124,7 @@ void CServer::ResetBotInfo(int ClientID, int BotType, int BotSubType)
 		{
 			if(!g_Config.m_SvCityStart) Name = "NPC:Miki";
 			else if(g_Config.m_SvCityStart == 1) Name = "NPC:Saki";
-		}	
+		}
 		str_copy(m_aClients[ClientID].m_aName , Name, MAX_NAME_LENGTH);
 	}
 	else
@@ -2133,9 +2133,9 @@ void CServer::ResetBotInfo(int ClientID, int BotType, int BotSubType)
 
 void CServer::InitClientBot(int ClientID)
 {
-	if (ClientID < MAX_NOBOT || ClientID > MAX_CLIENTS)
+	if (ClientID < MAX_PLAYERS || ClientID >= MAX_CLIENTS)
 		return;
-		
+
 	m_aClients[ClientID].m_State = CServer::CClient::STATE_INGAME;
 }
 
@@ -2158,7 +2158,7 @@ void CServer::SetClientLanguage(int ClientID, const char* pLanguage)
 {
 	str_copy(m_aClients[ClientID].m_aLanguage, pLanguage, sizeof(m_aClients[ClientID].m_aLanguage));
 }
-	
+
 int CServer::GetFireDelay(int ClientID, int WID)
 {
 	return m_InfFireDelay[ClientID][WID];
@@ -2227,7 +2227,7 @@ class CGameServerCmd_SendChatMOTD : public CServer::CGameServerCmd
 private:
 	int m_ClientID;
 	char m_aText[512];
-	
+
 public:
 	CGameServerCmd_SendChatMOTD(int ClientID, const char* pText)
 	{
@@ -2246,7 +2246,7 @@ class CGameServerCmd_SendChatTarget : public CServer::CGameServerCmd
 private:
 	int m_ClientID;
 	char m_aText[128];
-	
+
 public:
 	CGameServerCmd_SendChatTarget(int ClientID, const char* pText)
 	{
@@ -2266,7 +2266,7 @@ private:
 	int m_ClientID;
 	int m_ChatCategory;
 	char m_aText[128];
-	
+
 public:
 	CGameServerCmd_SendChatTarget_Language(int ClientID, int ChatCategory, const char* pText)
 	{
@@ -2288,7 +2288,7 @@ private:
 	int m_ItemID;
 	int m_Count;
 	int m_Type;
-	
+
 public:
 	CGameServerCmd_UseItem(int ClientID, int ItemID, int Count, int Type)
 	{
@@ -2297,7 +2297,7 @@ public:
 		m_Count = Count;
 		m_Type = Type;
 	}
-	
+
 	virtual void Execute(IGameServer* pGameServer)
 	{
 		pGameServer->UseItem(m_ClientID, m_ItemID, m_Count, m_Type);
@@ -2310,7 +2310,7 @@ private:
 	int m_ClientID;
 	char m_aType[64];
 	char m_aText[128];
-	
+
 public:
 	CGameServerCmd_AddLocalizeVote_Language(int ClientID, const char* pType, const char* pText)
 	{
@@ -2354,7 +2354,7 @@ void CServer::UpdateStat(int ClientID, int Type, int Size)
 		case DEXP: m_aClients[ClientID].m_Exp = Size; break;
 		case DMONEY: m_aClients[ClientID].m_Money = Size; break;
 		case DGOLD: m_aClients[ClientID].m_Gold = Size; break;
-		case DDONATE: m_aClients[ClientID].m_Donate = Size; break;	
+		case DDONATE: m_aClients[ClientID].m_Donate = Size; break;
 		case DQUEST: m_aClients[ClientID].m_Quest = Size; break;
 		case DSECC: m_aClients[ClientID].m_Seccurity = Size; break;
 		case DREL: m_aClients[ClientID].m_Rel = Size; break;
@@ -2440,7 +2440,7 @@ int CServer::GetItemCount(int ClientID, int ItemID)
 {
 	if(ClientID >= MAX_CLIENTS)
 		return 0;
-		
+
 	return m_stInv[ClientID][ItemID].i_count;
 }
 
@@ -2476,13 +2476,13 @@ int CServer::GetBonusEnchant(int ClientID, int ItemID, int Armor)
 			return 250*(m_stInv[ClientID][ItemID].i_enchant+1);
 		else if(ItemID == DRAGONFEET)
 			return 400*(m_stInv[ClientID][ItemID].i_enchant+1);
-		else return 0;		
+		else return 0;
 	}
 	else if(Armor == 17)
 	{
 		if(ItemID == STCLASIC)
 			return 1*(m_stInv[ClientID][ItemID].i_enchant+1);
-		else return 0;			
+		else return 0;
 	}
 	else return 0;
 }
@@ -2491,7 +2491,7 @@ void CServer::SetItemPrice(int ClientID, int ItemID, int Level, int Price)
 {
 	if(ItemID < 0 || ItemID >= 200)
 		return;
-	
+
 	if(IsClientLogged(ClientID) && GetItemSettings(ClientID, PIGPIG) && Price > 10)
 		Price -= (int)(Price/100)*5;
 
@@ -2581,7 +2581,7 @@ public:
 		char aBuf[256];
 		try
 		{
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"UPDATE tw_Materials "
 				"SET Materials = '%d' "
 				"WHERE ID = '%d';"
@@ -2618,7 +2618,7 @@ int CServer::GetRewardMail(int ClientID, int ID, int Type)
 {
 	if(!IsClientLogged(ClientID))
 		return -1;
-		
+
 	return Type ? m_aClients[ClientID].m_ItemNumReward[ID] : m_aClients[ClientID].m_ItemReward[ID];
 }
 
@@ -2647,7 +2647,7 @@ public:
 		try
 		{
 			int iscope = 0;
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT * FROM tw_Mail "
 				"WHERE IDOwner = '%d' LIMIT 20;"
 				, m_pServer->m_aClients[m_ClientID].m_UserID);
@@ -2667,7 +2667,7 @@ public:
 
 				char aProtocol[16];
 				str_format(aProtocol, sizeof(aProtocol), "reward%d", iscope);
-				str_format(Text, sizeof(Text), "Get Reward %s : %d and Delete Mail", m_pServer->GetItemName(m_ClientID, ItemID, false), ItemNum);	
+				str_format(Text, sizeof(Text), "Get Reward %s : %d and Delete Mail", m_pServer->GetItemName(m_ClientID, ItemID, false), ItemNum);
 				pCmd = new CGameServerCmd_AddLocalizeVote_Language(m_ClientID, aProtocol, _(Text));
 				m_pServer->AddGameServerCmd(pCmd);
 
@@ -2697,23 +2697,23 @@ class CSqlJob_Server_RemMail : public CSqlJob
 private:
 	CServer* m_pServer;
 	int m_IDMail;
-	
+
 public:
 	CSqlJob_Server_RemMail(CServer* pServer, int IDMail)
 	{
 		m_pServer = pServer;
-		m_IDMail = IDMail; 
+		m_IDMail = IDMail;
 	}
 
 	virtual bool Job(CSqlServer* pSqlServer)
 	{
-		char aBuf[256];			
+		char aBuf[256];
 		try
 		{
-			str_format(aBuf, sizeof(aBuf), 
-				"DELETE FROM tw_Mail " 
+			str_format(aBuf, sizeof(aBuf),
+				"DELETE FROM tw_Mail "
 				"WHERE ID = '%d' LIMIT 1;"
-				, m_IDMail);	
+				, m_IDMail);
 			pSqlServer->executeSql(aBuf);
 		}
 		catch (sql::SQLException &e)
@@ -2739,7 +2739,7 @@ private:
 	int m_ItemID;
 	int m_ItemNum;
 	CSqlString<64> m_sType;
-	
+
 public:
 	CSqlJob_Server_SendMail(CServer* pServer, int AuthedID, const char* pText, int ItemID, int ItemNum)
 	{
@@ -2755,11 +2755,11 @@ public:
 		char aBuf[256];
 		try
 		{
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"INSERT INTO tw_Mail "
 				"(IDOwner, TextMail, ItemID, ItemCount) "
 				"VALUES ('%d', '%s', '%d', '%d');"
-				, m_AuthedID, m_sType.ClrStr(), m_ItemID, m_ItemNum);	
+				, m_AuthedID, m_sType.ClrStr(), m_ItemID, m_ItemNum);
 			pSqlServer->executeSql(aBuf);
 		}
 		catch (sql::SQLException &e)
@@ -2800,7 +2800,7 @@ public:
 				pSqlServer->executeSqlQuery("SELECT * FROM tw_uItemList;");
 				while(pSqlServer->GetResults()->next())
 				{
-					for(int i = 0; i < MAX_NOBOT; ++i)
+					for(int i = 0; i < MAX_PLAYERS; ++i)
 					{
 						int ItemID = (int)pSqlServer->GetResults()->getInt("il_id");
 						m_pServer->m_stInv[i][ItemID].i_id = ItemID;
@@ -2863,22 +2863,22 @@ public:
 		{
 			if(m_pServer->m_stInv[m_ClientID][m_ItemID].i_count > 0)
 			{
-				str_format(aBuf, sizeof(aBuf), 
+				str_format(aBuf, sizeof(aBuf),
 					"UPDATE tw_uItems "
 					"SET item_count = item_count + '%d', item_settings = item_settings + '%d' "
 					"WHERE item_owner = '%d' AND il_id = '%d';"
 					, m_Count, m_Settings, m_pServer->m_aClients[m_ClientID].m_UserID, m_ItemID);
 				pSqlServer->executeSql(aBuf);
-				
+
 				m_pServer->m_stInv[m_ClientID][m_ItemID].i_count += m_Count;
 				m_pServer->m_stInv[m_ClientID][m_ItemID].i_settings += m_Settings;
 				return true;
 			}
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"INSERT INTO tw_uItems "
 				"(il_id, item_owner, item_count, item_type, item_settings, item_enchant) "
 				"VALUES ('%d', '%d', '%d', '%d', '%d', '%d');"
-				, m_ItemID, m_pServer->m_aClients[m_ClientID].m_UserID, m_Count, m_pServer->m_stInv[m_ClientID][m_ItemID].i_type, m_Settings, m_Enchant);	
+				, m_ItemID, m_pServer->m_aClients[m_ClientID].m_UserID, m_Count, m_pServer->m_stInv[m_ClientID][m_ItemID].i_type, m_Settings, m_Enchant);
 			pSqlServer->executeSql(aBuf);
 
 			m_pServer->m_stInv[m_ClientID][m_ItemID].i_settings = m_Settings;
@@ -2912,12 +2912,12 @@ private:
 	int m_ClientID;
 	int m_Count;
 	int m_Type;
-	
+
 public:
 	CSqlJob_Server_RemItems(CServer* pServer, int ItemID, int ClientID, int Count, int Type)
 	{
 		m_pServer = pServer;
-		m_ItemID = ItemID; 
+		m_ItemID = ItemID;
 		m_ClientID = ClientID;
 		m_Count = Count;
 		m_Type = Type;
@@ -2925,10 +2925,10 @@ public:
 
 	virtual bool Job(CSqlServer* pSqlServer)
 	{
-		char aBuf[256];			
+		char aBuf[256];
 		try
 		{
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT item_count FROM tw_uItems "
 				"WHERE item_owner = '%d' AND il_id = '%d';",
 				m_pServer->m_aClients[m_ClientID].m_UserID, m_ItemID);
@@ -2938,24 +2938,24 @@ public:
 			{
 				int Count = (int)pSqlServer->GetResults()->getInt("item_count");
 				m_pServer->m_stInv[m_ClientID][m_ItemID].i_count = Count;
-			
+
 				if(Count > m_Count)
 				{
-					str_format(aBuf, sizeof(aBuf), 
+					str_format(aBuf, sizeof(aBuf),
 						"UPDATE tw_uItems "
 						"SET item_count = item_count - '%d' "
 						"WHERE item_owner = '%d' AND il_id = '%d';"
 						, m_Count, m_pServer->m_aClients[m_ClientID].m_UserID, m_ItemID);
-					pSqlServer->executeSql(aBuf);	
+					pSqlServer->executeSql(aBuf);
 					m_pServer->m_stInv[m_ClientID][m_ItemID].i_count -= m_Count;
 				}
 				else
 				{
-					str_format(aBuf, sizeof(aBuf), 
-						"DELETE FROM tw_uItems " 
+					str_format(aBuf, sizeof(aBuf),
+						"DELETE FROM tw_uItems "
 						"WHERE item_owner = '%d' AND il_id = '%d';"
-						, m_pServer->m_aClients[m_ClientID].m_UserID, m_ItemID);	
-					pSqlServer->executeSql(aBuf);			
+						, m_pServer->m_aClients[m_ClientID].m_UserID, m_ItemID);
+					pSqlServer->executeSql(aBuf);
 					m_pServer->m_stInv[m_ClientID][m_ItemID].i_count = 0;
 					m_pServer->m_stInv[m_ClientID][m_ItemID].i_settings = 0;
 					m_pServer->m_aClients[m_ClientID].m_ItemCount[m_pServer->m_stInv[m_ClientID][m_ItemID].i_type]--;
@@ -3027,7 +3027,7 @@ void CServer::SetItemSettings(int ClientID, int ItemID, int ItemType)
 {
 	if(!GetItemCount(ClientID, ItemID))
 		return;
-		
+
 	if(ItemType > 10 && m_stInv[ClientID][ItemID].i_type == ItemType)
 	{
 		for(int i = 0; i < MAX_ITEM; i++)
@@ -3047,7 +3047,7 @@ void CServer::SetItemSettingsCount(int ClientID, int ItemID, int Count)
 {
 	if(!GetItemCount(ClientID, ItemID))
 		return;
-		
+
 	m_stInv[ClientID][ItemID].i_settings = Count;
 	UpdateItemSettings(ItemID, ClientID);
 }
@@ -3059,7 +3059,7 @@ private:
 	CServer* m_pServer;
 	int m_ItemID;
 	int m_ClientID;
-	
+
 public:
 	CSqlJob_Server_UpdateItemSettings(CServer* pServer, int ItemID, int ClientID)
 	{
@@ -3075,7 +3075,7 @@ public:
 		{
 			if(m_pServer->GetItemCount(m_ClientID, m_ItemID) > 0)
 			{
-				str_format(aBuf, sizeof(aBuf), 
+				str_format(aBuf, sizeof(aBuf),
 					"UPDATE tw_uItems "
 					"SET item_settings = '%d', item_enchant = '%d' "
 					"WHERE item_owner = '%d' AND il_id = '%d';"
@@ -3121,12 +3121,12 @@ public:
 		char aBuf[256];
 		if(m_pServer->m_aClients[m_ClientID].m_LogInstance != GetInstance())
 			return true;
-	
+
 		try
 		{
 			if(bGetCount)
 			{
-				str_format(aBuf, sizeof(aBuf), 
+				str_format(aBuf, sizeof(aBuf),
 					"SELECT il_id, item_type FROM tw_uItems "
 					"WHERE item_owner = '%d' AND item_type != '10, 12, 15, 16, 17';",
 					m_pServer->m_aClients[m_ClientID].m_UserID, m_Type);
@@ -3134,21 +3134,21 @@ public:
 
 				for(int i = 0; i < 7; i++)
 					m_pServer->m_aClients[m_ClientID].m_ItemCount[i] = 0;
- 
+
 				while(pSqlServer->GetResults()->next())
 				{
 					int ItemType = (int)pSqlServer->GetResults()->getInt("item_type");
 					m_pServer->m_aClients[m_ClientID].m_ItemCount[ItemType]++;
 				}
-				return true;			
+				return true;
 			}
 
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT il_id, item_count FROM tw_uItems "
 				"WHERE item_owner = '%d' AND item_type = '%d';",
 				m_pServer->m_aClients[m_ClientID].m_UserID, m_Type);
 			pSqlServer->executeSqlQuery(aBuf);
-			
+
 			bool found = false;
 			while(pSqlServer->GetResults()->next())
 			{
@@ -3158,10 +3158,10 @@ public:
 				m_pServer->m_stInv[m_ClientID][ItemID].i_count = ItemCount;
 
 				char iName[64], iUsed[8];
-				if(m_Type == 15 || m_Type == 16 || m_Type == 17) 
+				if(m_Type == 15 || m_Type == 16 || m_Type == 17)
 				{
 					str_format(iUsed, sizeof(iUsed), "it%d", ItemID);
-					str_format(iName, sizeof(iName), "➳ Lvl%d %s +%d", 
+					str_format(iName, sizeof(iName), "➳ Lvl%d %s +%d",
 						m_pServer->GetItemPrice(m_ClientID, ItemID, 0), m_pServer->GetItemName(m_ClientID, ItemID), m_pServer->GetItemEnchant(m_ClientID, ItemID), ItemCount);
 
 					CServer::CGameServerCmd* pCmd = new CGameServerCmd_AddLocalizeVote_Language(m_ClientID, iUsed, _(iName));
@@ -3171,14 +3171,14 @@ public:
 					str_format(iUsed, sizeof(iUsed), "set%d", ItemID);
 					if(m_Type == 17)
 					{
-						str_format(iName, sizeof(iName), "➳ %s %s (Damage +%d)", 
-							Data,  m_pServer->GetItemName(m_ClientID, ItemID), m_pServer->GetBonusEnchant(m_ClientID, ItemID, m_Type));				
+						str_format(iName, sizeof(iName), "➳ %s %s (Damage +%d)",
+							Data,  m_pServer->GetItemName(m_ClientID, ItemID), m_pServer->GetBonusEnchant(m_ClientID, ItemID, m_Type));
 					}
 					else
 					{
-						str_format(iName, sizeof(iName), "➳ %s %s (Health +%d Armor +%d)", 
-							Data,  m_pServer->GetItemName(m_ClientID, ItemID), m_pServer->GetBonusEnchant(m_ClientID, ItemID, m_Type), 
-							m_pServer->GetBonusEnchant(m_ClientID, ItemID, m_Type));				
+						str_format(iName, sizeof(iName), "➳ %s %s (Health +%d Armor +%d)",
+							Data,  m_pServer->GetItemName(m_ClientID, ItemID), m_pServer->GetBonusEnchant(m_ClientID, ItemID, m_Type),
+							m_pServer->GetBonusEnchant(m_ClientID, ItemID, m_Type));
 					}
 
 					pCmd = new CGameServerCmd_AddLocalizeVote_Language(m_ClientID, iUsed, _(iName));
@@ -3187,9 +3187,9 @@ public:
 				else
 				{
 					str_format(iUsed, sizeof(iUsed), "it%d", ItemID);
-					str_format(iName, sizeof(iName), "➳ Lvl%d %s : X%d", 
+					str_format(iName, sizeof(iName), "➳ Lvl%d %s : X%d",
 						m_pServer->GetItemPrice(m_ClientID, ItemID, 0), m_pServer->GetItemName(m_ClientID, ItemID), ItemCount);
-				
+
 					CServer::CGameServerCmd* pCmd = new CGameServerCmd_AddLocalizeVote_Language(m_ClientID, iUsed, _(iName));
 					m_pServer->AddGameServerCmd(pCmd);
 				}
@@ -3208,7 +3208,7 @@ public:
 		}
 		return true;
 	}
-	
+
 	virtual void CleanInstanceRef()
 	{
 		m_pServer->m_aClients[m_ClientID].m_LogInstance = -1;
@@ -3229,10 +3229,10 @@ bool CServer::GetLeader(int ClientID, int ClanID)
 {
 	if(m_aClients[ClientID].m_ClanID < 1)
 		return false;
-	
+
 	if(str_comp_nocase(m_stClan[ClanID].f_creator, ClientName(ClientID)) == 0)
 		return true;
-	else 
+	else
 		return false;
 }
 
@@ -3241,7 +3241,7 @@ class CSqlJob_Server_InitClan : public CSqlJob
 {
 private:
 	CServer* m_pServer;
-	
+
 public:
 	CSqlJob_Server_InitClan(CServer* pServer)
 	{
@@ -3270,12 +3270,12 @@ public:
 				m_pServer->m_stClan[ClanID].f_chairupgr = (int)pSqlServer->GetResults()->getInt("ChairHouse");
 				str_copy(m_pServer->m_stClan[ClanID].f_name, pSqlServer->GetResults()->getString("Clanname").c_str(), sizeof(m_pServer->m_stClan[ClanID].f_name));
 				str_copy(m_pServer->m_stClan[ClanID].f_creator, pSqlServer->GetResults()->getString("LeaderName").c_str(), sizeof(m_pServer->m_stClan[ClanID].f_creator));
-				
-				
+
+
 				m_pServer->UpdClanCount(ClanID);
 				Num++;
 			}
-			
+
 			dbg_msg("infclass", "############################################");
 			dbg_msg("infclass", "################ LOADS CLAN %d", Num);
 			dbg_msg("infclass", "############################################");
@@ -3285,7 +3285,7 @@ public:
 			dbg_msg("sql", "Error: %s", e.what());
 			return false;
 		}
-		
+
 		return true;
 	}
 };
@@ -3326,7 +3326,7 @@ public:
 			if(str_comp(m_sType.ClrStr(), "Leader") == 0)
 			{
 				m_sType = CSqlString<64>(m_pServer->m_stClan[m_ClanID].f_creator);
-				str_format(aBuf, sizeof(aBuf), 
+				str_format(aBuf, sizeof(aBuf),
 					"UPDATE tw_Clans SET LeaderName = '%s' WHERE ClanID = '%d';",
 					m_sType.ClrStr(), m_ClanID);
 				pSqlServer->executeSqlQuery(aBuf);
@@ -3339,7 +3339,7 @@ public:
 				pSqlServer->executeSqlQuery(aBuf);
 				if(pSqlServer->GetResults()->next())
 				{
-					m_pServer->m_stClan[m_ClanID].f_chairupgr = (int)pSqlServer->GetResults()->getInt("ChairHouse"); 
+					m_pServer->m_stClan[m_ClanID].f_chairupgr = (int)pSqlServer->GetResults()->getInt("ChairHouse");
 					m_pServer->m_stClan[m_ClanID].f_spawninhouse = (int)pSqlServer->GetResults()->getInt("SpawnHouse");
 					m_pServer->m_stClan[m_ClanID].f_upgrade[1] = (int)pSqlServer->GetResults()->getInt("MoneyAdd");
 					m_pServer->m_stClan[m_ClanID].f_upgrade[0] = (int)pSqlServer->GetResults()->getInt("ExpAdd");
@@ -3413,7 +3413,7 @@ public:
 					else m_pServer->m_stClan[m_ClanID].f_upgrade[1] -= m_Price;
 
 					VarGot = m_pServer->m_stClan[m_ClanID].f_upgrade[1];
-				}		
+				}
 				else if(str_comp(m_sType.ClrStr(), "SpawnHouse") == 0)
 				{
 					m_pServer->m_stClan[m_ClanID].f_spawninhouse = (int)pSqlServer->GetResults()->getInt("SpawnHouse");
@@ -3421,7 +3421,7 @@ public:
 					// else m_pServer->m_stClan[m_ClanID].f_spawninhouse -= m_Price;
 					m_pServer->m_stClan[m_ClanID].f_spawninhouse = (bool)m_Price;
 					VarGot = m_pServer->m_stClan[m_ClanID].f_spawninhouse;
-				}	
+				}
 				else if(str_comp(m_sType.ClrStr(), "ChairHouse") == 0)
 				{
 					m_pServer->m_stClan[m_ClanID].f_chairupgr = (int)pSqlServer->GetResults()->getInt("ChairHouse");
@@ -3429,16 +3429,16 @@ public:
 					else m_pServer->m_stClan[m_ClanID].f_chairupgr -= m_Price;
 
 					VarGot = m_pServer->m_stClan[m_ClanID].f_chairupgr;
-				}	
+				}
 				if(m_Save && VarGot > -1)
 				{
-					str_format(aBuf, sizeof(aBuf), 
+					str_format(aBuf, sizeof(aBuf),
 						"UPDATE tw_Clans SET %s = '%d' WHERE ClanID = '%d';",
 						m_sType.ClrStr(), VarGot, m_ClanID);
 					pSqlServer->executeSqlQuery(aBuf);
 				}
 				m_pServer->UpdClanCount(m_ClanID);
-			}	
+			}
 			return true;
 		}
 		catch(sql::SQLException& e)
@@ -3467,7 +3467,7 @@ private:
 	int m_ClientID;
 	CSqlString<64> m_sName;
 	CSqlString<64> m_sNick;
-	
+
 public:
 	CSqlJob_Server_Newclan(CServer* pServer, int ClientID, const char* pName)
 	{
@@ -3483,7 +3483,7 @@ public:
 		// Проверка регистра
 		if(m_pServer->m_aClients[m_ClientID].m_LogInstance != GetInstance())
 			return true;
-	
+
 		try
 		{
 			str_format(aBuf, sizeof(aBuf), "SELECT ClanID FROM %s_Clans WHERE Clanname COLLATE UTF8_GENERAL_CI = '%s';", pSqlServer->GetPrefix(), m_sName.ClrStr());
@@ -3494,17 +3494,17 @@ public:
 				dbg_msg("infclass", "Clan already taken");
 				CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(m_ClientID, CHATCATEGORY_DEFAULT, _("This clan name already used."));
 				m_pServer->AddGameServerCmd(pCmd);
-				
+
 				return true;
 			}
 			else
 			{
-				str_format(aBuf, sizeof(aBuf), 
+				str_format(aBuf, sizeof(aBuf),
 					"INSERT INTO %s_Clans (Clanname, LeaderName, LeaderID) VALUES ('%s', '%s', '%d');"
 					, pSqlServer->GetPrefix(), m_sName.ClrStr(), m_sNick.ClrStr(), m_pServer->m_aClients[m_ClientID].m_UserID);
 				pSqlServer->executeSql(aBuf);
 
-				str_format(aBuf, sizeof(aBuf), 
+				str_format(aBuf, sizeof(aBuf),
 					"SELECT * FROM %s_Clans WHERE Clanname COLLATE UTF8_GENERAL_CI = '%s';"
 					, pSqlServer->GetPrefix(), m_sName.ClrStr());
 				pSqlServer->executeSqlQuery(aBuf);
@@ -3516,7 +3516,7 @@ public:
 					m_pServer->m_stClan[ClanID].f_money = (int)pSqlServer->GetResults()->getInt("Money");
 					m_pServer->m_stClan[ClanID].f_maxnum = (int)pSqlServer->GetResults()->getInt("MaxNum");
 					m_pServer->m_stClan[ClanID].f_countnum = 1;
-					
+
 					str_copy(m_pServer->m_stClan[ClanID].f_name, pSqlServer->GetResults()->getString("Clanname").c_str(), sizeof(m_pServer->m_stClan[ClanID].f_name));
 					str_copy(m_pServer->m_stClan[ClanID].f_creator, pSqlServer->GetResults()->getString("LeaderName").c_str(), sizeof(m_pServer->m_stClan[ClanID].f_creator));
 
@@ -3525,8 +3525,8 @@ public:
 
 					str_format(aBuf, sizeof(aBuf), "UPDATE tw_Users SET ClanID = '%d', ClanAdded = '%d' WHERE UserId = '%d';"
 						, ClanID, NULL, m_pServer->m_aClients[m_ClientID].m_UserID);
-					pSqlServer->executeSqlQuery(aBuf);	
-		
+					pSqlServer->executeSqlQuery(aBuf);
+
 					CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(m_ClientID, CHATCATEGORY_DEFAULT, _("Clan created and initized Data."));
 					m_pServer->AddGameServerCmd(pCmd);
 
@@ -3539,10 +3539,10 @@ public:
 		{
 			dbg_msg("sql", "Error: %s", e.what());
 			return false;
-		}		
+		}
 		return true;
 	}
-	
+
 	virtual void CleanInstanceRef()
 	{
 		m_pServer->m_aClients[m_ClientID].m_LogInstance = -1;
@@ -3565,7 +3565,7 @@ private:
 	CServer* m_pServer;
 	int m_ClientID;
 	int m_ClanID;
-	
+
 public:
 	CSqlJob_Server_Listclan(CServer* pServer, int ClientID, int ClanID)
 	{
@@ -3579,24 +3579,24 @@ public:
 		char aBuf[128];
 		if(m_pServer->m_aClients[m_ClientID].m_LogInstance != GetInstance())
 			return true;
-	
+
 		try
 		{
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT UserID, ClanID, Level, Nick, ClanAdded FROM tw_Users "
 				"WHERE ClanID = '%d' ORDER BY Level DESC;", m_ClanID);
 			pSqlServer->executeSqlQuery(aBuf);
-			
+
 			int Num = 0;
 			char aReform[MAX_NAME_LENGTH], aBufW[64], aBufCs[12];
 			while(pSqlServer->GetResults()->next())
 			{
 				str_copy(aReform, pSqlServer->GetResults()->getString("Nick").c_str(), sizeof(aReform));
-				
+
 				int UserID = (int)pSqlServer->GetResults()->getInt("UserID");
 				int Level = (int)pSqlServer->GetResults()->getInt("Level");
 				int ClanAdded = (int)pSqlServer->GetResults()->getInt("ClanAdded");
-				
+
 				str_format(aBufCs, sizeof(aBufCs), "cs%d", Num);
 				str_format(aBufW, sizeof(aBufW), "▹ Level %d:%s(ID:%d)", Level, aReform, UserID);
 				CServer::CGameServerCmd* pCmd = new CGameServerCmd_AddLocalizeVote_Language(m_ClientID, aBufCs, _(aBufW));
@@ -3605,7 +3605,7 @@ public:
 				str_format(aBufW, sizeof(aBufW), "Added %d money", ClanAdded);
 				pCmd = new CGameServerCmd_AddLocalizeVote_Language(m_ClientID, aBufCs, _(aBufW));
 				m_pServer->AddGameServerCmd(pCmd);
-				
+
 				str_copy(m_pServer->m_aClients[m_ClientID].m_SelectPlayer[Num], aReform, sizeof(m_pServer->m_aClients[m_ClientID].m_SelectPlayer[Num]));
 				Num++;
 			}
@@ -3616,12 +3616,12 @@ public:
 			CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(m_ClientID, CHATCATEGORY_DEFAULT, _("Error clan list say administrator."));
 			m_pServer->AddGameServerCmd(pCmd);
 			dbg_msg("sql", "Can't check clanname list (MySQL Error: %s)", e.what());
-			
+
 			return false;
 		}
 		return true;
 	}
-	
+
 	virtual void CleanInstanceRef()
 	{
 		m_pServer->m_aClients[m_ClientID].m_LogInstance = -1;
@@ -3644,7 +3644,7 @@ private:
 	CServer* m_pServer;
 	CSqlString<64> m_sName;
 	int m_ClanID;
-	
+
 public:
 	CSqlJob_Server_UpClanCount(CServer* pServer, int ClanID)
 	{
@@ -3657,12 +3657,12 @@ public:
 		char aBuf[128];
 		try
 		{
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT ClanID FROM tw_Users "
 				"WHERE ClanID = '%d';"
 				, m_ClanID);
 			pSqlServer->executeSqlQuery(aBuf);
-			
+
 			int Num = 0;
 			while(pSqlServer->GetResults()->next())
 				Num++;
@@ -3716,13 +3716,13 @@ public:
 
 	virtual bool Job(CSqlServer* pSqlServer)
 	{
-		char aBuf[512];		
+		char aBuf[512];
 		try
 		{
 			int ClanID = 0;
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"UPDATE tw_Users SET ClanID = %d, ClanAdded = %d WHERE Nick = '%s';", ClanID, ClanID, m_sName.ClrStr());
-			pSqlServer->executeSqlQuery(aBuf);	
+			pSqlServer->executeSqlQuery(aBuf);
 		}
 		catch (sql::SQLException &e)
 		{
@@ -3734,7 +3734,7 @@ public:
 };
 void CServer::ExitClanOff(int ClientID, const char* pName)
 {
-	for(int i = 0; i < MAX_NOBOT; ++i)
+	for(int i = 0; i < MAX_PLAYERS; ++i)
 	{
 		if(ClientIngame(i) && m_aClients[i].m_UserID)
 			if(str_comp_nocase(pName, ClientName(i)) == 0)
@@ -3751,7 +3751,7 @@ class CSqlJob_Server_InitClient : public CSqlJob
 private:
 	CServer* m_pServer;
 	int m_ClientID;
-	
+
 public:
 	CSqlJob_Server_InitClient(CServer* pServer, int ClientID)
 	{
@@ -3765,7 +3765,7 @@ public:
 		// Сразу инициализировать
 		try
 		{
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT * FROM tw_Users "
 				"WHERE UserId = %d;"
 				, m_pServer->m_aClients[m_ClientID].m_UserID);
@@ -3786,9 +3786,9 @@ public:
 				m_pServer->m_aClients[m_ClientID].m_Kill = (int)pSqlServer->GetResults()->getInt("Killing");
 				m_pServer->m_aClients[m_ClientID].m_WinArea = (int)pSqlServer->GetResults()->getInt("WinArea");
 				m_pServer->m_aClients[m_ClientID].m_ClanAdded = m_pServer->m_aClients[m_ClientID].m_ClanID > 0 ? (int)pSqlServer->GetResults()->getInt("ClanAdded") : 0;
-	
+
 				str_copy(m_pServer->m_aClients[m_ClientID].m_aUsername, pSqlServer->GetResults()->getString("Nick").c_str(), sizeof(m_pServer->m_aClients[m_ClientID].m_aUsername));
-				dbg_msg("infclass", "DT init %d ID acc", m_pServer->m_aClients[m_ClientID].m_UserID);	
+				dbg_msg("infclass", "DT init %d ID acc", m_pServer->m_aClients[m_ClientID].m_UserID);
 			}
 		}
 		catch (sql::SQLException &e)
@@ -3796,13 +3796,13 @@ public:
 			CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(m_ClientID, CHATCATEGORY_DEFAULT, _("Error initilized clan say administrator."));
 			m_pServer->AddGameServerCmd(pCmd);
 			dbg_msg("sql", "Can't init new clan (MySQL Error: %s)", e.what());
-			
+
 			return false;
 		}
-		
+
 		try
 		{
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT il_id, item_count, item_settings, item_enchant FROM tw_uItems WHERE item_owner = %d;", m_pServer->m_aClients[m_ClientID].m_UserID);
 			pSqlServer->executeSqlQuery(aBuf);
 
@@ -3812,28 +3812,28 @@ public:
 				int ItemSettings = (int)pSqlServer->GetResults()->getInt("item_settings");
 				int ItemEnchant = (int)pSqlServer->GetResults()->getInt("item_enchant");
 				m_pServer->m_stInv[m_ClientID][IDitem].i_count = (int)pSqlServer->GetResults()->getInt("item_count");
-				m_pServer->m_stInv[m_ClientID][IDitem].i_settings = ItemSettings;			
+				m_pServer->m_stInv[m_ClientID][IDitem].i_settings = ItemSettings;
 				m_pServer->m_stInv[m_ClientID][IDitem].i_enchant = ItemEnchant;
-			}					
+			}
 		}
 		catch (sql::SQLException &e)
 		{
 			CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(m_ClientID, CHATCATEGORY_DEFAULT, "An error occured during the logging.");
 			m_pServer->AddGameServerCmd(pCmd);
 			dbg_msg("sql", "Can't init inventory (MySQL Error: %s)", e.what());
-			
+
 			return false;
 		}
 
 		try
 		{
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT * FROM tw_uClass WHERE UserID = %d;"
 				, m_pServer->m_aClients[m_ClientID].m_UserID);
 			pSqlServer->executeSqlQuery(aBuf);
 
 			if(pSqlServer->GetResults()->next())
-			{				
+			{
 				m_pServer->m_aClients[m_ClientID].Upgrade = (int)pSqlServer->GetResults()->getInt("Upgrade");
 				m_pServer->m_aClients[m_ClientID].SkillPoint = (int)pSqlServer->GetResults()->getInt("SkillPoint");
 				m_pServer->m_aClients[m_ClientID].Damage = (int)pSqlServer->GetResults()->getInt("Damage");
@@ -3846,10 +3846,10 @@ public:
 				m_pServer->m_aClients[m_ClientID].Mana = (int)pSqlServer->GetResults()->getInt("Mana");
 				m_pServer->m_aClients[m_ClientID].m_HammerRange = (int)pSqlServer->GetResults()->getInt("HammerRange");
 				m_pServer->m_aClients[m_ClientID].m_Pasive2 = (int)pSqlServer->GetResults()->getInt("Pasive2");
-				
+
 				CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(m_ClientID, CHATCATEGORY_DEFAULT, _("You are now logged. Welcome"));
-				m_pServer->AddGameServerCmd(pCmd);			
-			}					
+				m_pServer->AddGameServerCmd(pCmd);
+			}
 		}
 		catch (sql::SQLException &e)
 		{
@@ -3878,7 +3878,7 @@ private:
 	int m_ClientID;
 	int m_Type;
 	int m_UserID;
-	
+
 public:
 	CSqlJob_Server_UpdateStat(CServer* pServer, int ClientID, int UserID, int Type)
 	{
@@ -3895,7 +3895,7 @@ public:
 		{
 			if(m_Type == 0)
 			{
-				str_format(aBuf, sizeof(aBuf), 
+				str_format(aBuf, sizeof(aBuf),
 					"UPDATE %s_Users "
 					"SET Level = '%d', "
 					"Exp = '%d', "
@@ -3911,17 +3911,17 @@ public:
 					"Seccurity = '%d', "
 					"ClanAdded = '%d' "
 					"WHERE UserId = '%d';"
-					, pSqlServer->GetPrefix(), m_pServer->m_aClients[m_ClientID].m_Level, m_pServer->m_aClients[m_ClientID].m_Exp, 
-						m_pServer->m_aClients[m_ClientID].m_Class, m_pServer->m_aClients[m_ClientID].m_Money, m_pServer->m_aClients[m_ClientID].m_Gold, m_pServer->m_aClients[m_ClientID].m_Donate, m_pServer->m_aClients[m_ClientID].m_Rel, 
-						m_pServer->m_aClients[m_ClientID].m_Jail, m_pServer->m_aClients[m_ClientID].m_Quest, m_pServer->m_aClients[m_ClientID].m_Kill,  
-						m_pServer->m_aClients[m_ClientID].m_WinArea, m_pServer->m_aClients[m_ClientID].m_Seccurity, m_pServer->m_aClients[m_ClientID].m_ClanAdded, 
+					, pSqlServer->GetPrefix(), m_pServer->m_aClients[m_ClientID].m_Level, m_pServer->m_aClients[m_ClientID].m_Exp,
+						m_pServer->m_aClients[m_ClientID].m_Class, m_pServer->m_aClients[m_ClientID].m_Money, m_pServer->m_aClients[m_ClientID].m_Gold, m_pServer->m_aClients[m_ClientID].m_Donate, m_pServer->m_aClients[m_ClientID].m_Rel,
+						m_pServer->m_aClients[m_ClientID].m_Jail, m_pServer->m_aClients[m_ClientID].m_Quest, m_pServer->m_aClients[m_ClientID].m_Kill,
+						m_pServer->m_aClients[m_ClientID].m_WinArea, m_pServer->m_aClients[m_ClientID].m_Seccurity, m_pServer->m_aClients[m_ClientID].m_ClanAdded,
 						m_UserID);
-				
+
 				pSqlServer->executeSqlQuery(aBuf);
 			}
 			else if(m_Type == 1)
 			{
-				str_format(aBuf, sizeof(aBuf), 
+				str_format(aBuf, sizeof(aBuf),
 					"UPDATE %s_uClass "
 					"SET Upgrade = '%d', "
 					"SkillPoint = '%d', "
@@ -3937,19 +3937,19 @@ public:
 					"Pasive2 = '%d' "
 					"WHERE UserID = '%d';"
 					, pSqlServer->GetPrefix(), m_pServer->m_aClients[m_ClientID].Upgrade, m_pServer->m_aClients[m_ClientID].SkillPoint, m_pServer->m_aClients[m_ClientID].Speed, m_pServer->m_aClients[m_ClientID].Health, m_pServer->m_aClients[m_ClientID].Damage,
-					m_pServer->m_aClients[m_ClientID].HPRegen, m_pServer->m_aClients[m_ClientID].AmmoRegen, m_pServer->m_aClients[m_ClientID].Ammo, m_pServer->m_aClients[m_ClientID].Spray, m_pServer->m_aClients[m_ClientID].Mana, 
+					m_pServer->m_aClients[m_ClientID].HPRegen, m_pServer->m_aClients[m_ClientID].AmmoRegen, m_pServer->m_aClients[m_ClientID].Ammo, m_pServer->m_aClients[m_ClientID].Spray, m_pServer->m_aClients[m_ClientID].Mana,
 					m_pServer->m_aClients[m_ClientID].m_HammerRange, m_pServer->m_aClients[m_ClientID].m_Pasive2, m_UserID);
-				
+
 				pSqlServer->executeSqlQuery(aBuf);
 			}
 			else if(m_Type == 3)
 			{
 				int ClanID = m_pServer->m_aClients[m_ClientID].m_ClanID;
-				str_format(aBuf, sizeof(aBuf), 
+				str_format(aBuf, sizeof(aBuf),
 					"UPDATE tw_Users SET ClanID = '%d' WHERE UserId = '%d';"
 					, ClanID, m_pServer->m_aClients[m_ClientID].m_UserID);
-				pSqlServer->executeSqlQuery(aBuf);	
-				
+				pSqlServer->executeSqlQuery(aBuf);
+
 				if(ClanID > 0)
 					m_pServer->UpdClanCount(ClanID);
 			}
@@ -3966,11 +3966,11 @@ public:
 void CServer::UpdateStats(int ClientID, int Type)
 {
 	if(m_aClients[ClientID].m_Class < 0 || (m_aClients[ClientID].m_UserID < 0 && m_pGameServer))
-		return; 
+		return;
 
 	CSqlJob* pJob = new CSqlJob_Server_UpdateStat(this, ClientID, m_aClients[ClientID].m_UserID, Type);
 	pJob->Start();
-}    
+}
 
 class CSqlJob_Server_Login : public CSqlJob
 {
@@ -3980,7 +3980,7 @@ private:
 	CSqlString<64> m_sName;
 	CSqlString<64> m_sNick;
 	CSqlString<64> m_sPasswordHash;
-	
+
 public:
 	CSqlJob_Server_Login(CServer* pServer, int ClientID, const char* pName, const char* pPasswordHash)
 	{
@@ -3999,16 +3999,16 @@ public:
 
 		char aBuf[512];
 		try
-		{	
+		{
 			if(m_pServer->m_aClients[m_ClientID].m_Seccurity)
 				str_format(aBuf, sizeof(aBuf), "SELECT UserId, Username, Nick, PasswordHash FROM %s_Users "
 					"WHERE Username = '%s' AND PasswordHash = '%s' AND Nick = '%s';", pSqlServer->GetPrefix(), m_sName.ClrStr(), m_sPasswordHash.ClrStr(), m_sNick.ClrStr());
 			else
 				str_format(aBuf, sizeof(aBuf), "SELECT * FROM %s_Users WHERE PasswordHash = '%s' AND Nick = '%s';"
-					, pSqlServer->GetPrefix(), m_sPasswordHash.ClrStr(), m_sNick.ClrStr());	
+					, pSqlServer->GetPrefix(), m_sPasswordHash.ClrStr(), m_sNick.ClrStr());
 
 			pSqlServer->executeSqlQuery(aBuf);
-			
+
 			if(pSqlServer->GetResults()->next())
 			{
 				for(int i = 0; i < MAX_CLIENTS; ++i)
@@ -4022,7 +4022,7 @@ public:
 				m_pServer->m_aClients[m_ClientID].m_UserID = (int)pSqlServer->GetResults()->getInt("UserId");
 				m_pServer->InitClientDB(m_ClientID);
 				CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(m_ClientID, CHATCATEGORY_DEFAULT, _("Authed. In ESC press Play."));
-				m_pServer->AddGameServerCmd(pCmd);	
+				m_pServer->AddGameServerCmd(pCmd);
 			}
 			else
 			{
@@ -4035,7 +4035,7 @@ public:
 			CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(m_ClientID, CHATCATEGORY_DEFAULT, "An error occured during the logging.");
 			m_pServer->AddGameServerCmd(pCmd);
 			dbg_msg("sql", "Can't check username/password (MySQL Error: %s)", e.what());
-			
+
 			return false;
 		}
 		return true;
@@ -4047,14 +4047,14 @@ public:
 };
 
 void CServer::Login(int ClientID, const char* pUsername, const char* pPassword)
-{	
+{
 	if(m_aClients[ClientID].m_LogInstance >= 0)
 		return;
 
 	char aHash[64]; //Result
 	mem_zero(aHash, sizeof(aHash));
 	Crypt(pPassword, (const unsigned char*) "d9", 1, 16, aHash);
-	
+
 	CSqlJob* pJob = new CSqlJob_Server_Login(this, ClientID, pUsername, aHash);
 	m_aClients[ClientID].m_LogInstance = pJob->GetInstance();
 	pJob->Start();
@@ -4067,7 +4067,7 @@ private:
 	CServer* m_pServer;
 	int m_ClientID;
 	CSqlString<64> m_sNick;
-	
+
 public:
 	CSqlJob_Server_FirstInit(CServer* pServer, int ClientID)
 	{
@@ -4081,12 +4081,12 @@ public:
 		char aBuf[512];
 		try
 		{
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT Nick, Seccurity FROM tw_Users "
 				"WHERE Nick = '%s';"
 				, m_sNick.ClrStr());
 			pSqlServer->executeSqlQuery(aBuf);
-			
+
 			if(pSqlServer->GetResults()->next())
 				m_pServer->m_aClients[m_ClientID].m_Seccurity = (int)pSqlServer->GetResults()->getInt("Seccurity");
 			else
@@ -4098,7 +4098,7 @@ public:
 		catch (sql::SQLException &e)
 		{
 			dbg_msg("sql", "Can't check newplayer seccurity (MySQL Error: %s)", e.what());
-			return false;			
+			return false;
 		}
 		return true;
 	}
@@ -4119,7 +4119,7 @@ private:
 	CSqlString<64> m_sNick;
 	CSqlString<64> m_sPasswordHash;
 	CSqlString<64> m_sEmail;
-	
+
 public:
 	CSqlJob_Server_Register(CServer* pServer, int ClientID, const char* pName, const char* pPasswordHash, const char* pEmail)
 	{
@@ -4139,7 +4139,7 @@ public:
 		// Проверка регистра
 		if(m_pServer->m_aClients[m_ClientID].m_LogInstance != GetInstance())
 			return true;
-		
+
 		char aBuf[512];
 		char aAddrStr[64];
 		net_addr_str(m_pServer->m_NetServer.ClientAddr(m_ClientID), aAddrStr, sizeof(aAddrStr), false);
@@ -4147,7 +4147,7 @@ public:
 		try
 		{
 			//Проверяем имя или ник в базе
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT UserId FROM tw_Users WHERE Username = '%s' OR Nick = '%s';"
 				, m_sName.ClrStr(), m_sNick.ClrStr());
 			pSqlServer->executeSqlQuery(aBuf);
@@ -4165,14 +4165,14 @@ public:
 			CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(m_ClientID, CHATCATEGORY_DEFAULT, _("An error occured during the creation of your account."));
 			m_pServer->AddGameServerCmd(pCmd);
 			dbg_msg("sql", "Can't check username existance (MySQL Error: %s)", e.what());
-			
+
 			return false;
 		}
-		
+
 		//Создаем сам аккаунт
 		try
-		{	
-			str_format(aBuf, sizeof(aBuf), 
+		{
+			str_format(aBuf, sizeof(aBuf),
 				"INSERT INTO tw_Users "
 				"(Username, Nick, PasswordHash, Email, RegisterDate, RegisterIp) "
 				"VALUES ('%s', '%s', '%s', '%s', UTC_TIMESTAMP(), '%s');"
@@ -4184,14 +4184,14 @@ public:
 			CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(m_ClientID, CHATCATEGORY_DEFAULT, _("An error occured during the creation of your account."));
 			m_pServer->AddGameServerCmd(pCmd);
 			dbg_msg("sql", "Can't create new user (MySQL Error: %s)", e.what());
-			
+
 			return false;
 		}
-		
+
 		// Получаем инфу пользователя
 		try
-		{	
-			str_format(aBuf, sizeof(aBuf), 
+		{
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT UserId FROM tw_Users WHERE Username = '%s' AND PasswordHash = '%s';"
 				, m_sName.ClrStr(), m_sPasswordHash.ClrStr());
 			pSqlServer->executeSqlQuery(aBuf);
@@ -4199,7 +4199,7 @@ public:
 			if(pSqlServer->GetResults()->next())
 			{
 				int UsedID = (int)pSqlServer->GetResults()->getInt("UserId");
-				str_format(aBuf, sizeof(aBuf), 
+				str_format(aBuf, sizeof(aBuf),
 					"INSERT INTO tw_uClass (UserID, Username) VALUES ('%d', '%s');"
 					, UsedID, m_sName.ClrStr());
 				pSqlServer->executeSql(aBuf);
@@ -4221,7 +4221,7 @@ public:
 			CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(m_ClientID, CHATCATEGORY_DEFAULT, _("An error occured during the creation of your account."));
 			m_pServer->AddGameServerCmd(pCmd);
 			dbg_msg("sql", "Can't get the ID of the new user (MySQL Error: %s)", e.what());
-			
+
 			return false;
 		}
 		return true;
@@ -4236,10 +4236,10 @@ inline void CServer::Register(int ClientID, const char* pUsername, const char* p
 {
 	if(m_aClients[ClientID].m_LogInstance >= 0)
 		return;
-	
+
 	char aHash[64];
 	Crypt(pPassword, (const unsigned char*) "d9", 1, 16, aHash);
-	
+
 	CSqlJob* pJob = new CSqlJob_Server_Register(this, ClientID, pUsername, aHash, pEmail);
 	m_aClients[ClientID].m_LogInstance = pJob->GetInstance();
 	pJob->Start();
@@ -4253,7 +4253,7 @@ private:
 	int m_ClientID;
 	int m_Type;
 	CSqlString<64> m_sType;
-	
+
 public:
 	CSqlJob_Server_ShowTop10(CServer* pServer, int ClientID, const char* Type, int TypeGet)
 	{
@@ -4266,11 +4266,11 @@ public:
 	virtual bool Job(CSqlServer* pSqlServer)
 	{
 		char aBuf[256];
-		
+
 		try
 		{
 			int SortTop = m_Type == 2 ? 5 : 10;
-			str_format(aBuf, sizeof(aBuf), 
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT %s, Nick FROM %s_Users "
 				"ORDER BY %s DESC LIMIT %d;",
 				m_sType.ClrStr(), pSqlServer->GetPrefix(), m_sType.ClrStr(), SortTop);
@@ -4283,18 +4283,18 @@ public:
 
 				int Level = (int)pSqlServer->GetResults()->getInt(m_sType.ClrStr());
 				dynamic_string Buffer;
-				m_pServer->Localization()->Format(Buffer, m_pServer->GetClientLanguage(m_ClientID), _("Rank {int:Rank} - {str:Name} {int:Count}"), 
+				m_pServer->Localization()->Format(Buffer, m_pServer->GetClientLanguage(m_ClientID), _("Rank {int:Rank} - {str:Name} {int:Count}"),
 					"Rank", &Rank, "Name", pSqlServer->GetResults()->getString("Nick").c_str(), "Count", &Level);
-			
+
 				if(m_Type == 1)
 				{
 					CServer::CGameServerCmd* pCmd = new CGameServerCmd_AddLocalizeVote_Language(m_ClientID, "null", _(Buffer.buffer()));
 					m_pServer->AddGameServerCmd(pCmd);
 				}
 				else
-				{	
+				{
 					CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(-1, CHATCATEGORY_DEFAULT, _(Buffer.buffer()));
-					m_pServer->AddGameServerCmd(pCmd);	
+					m_pServer->AddGameServerCmd(pCmd);
 				}
 				Buffer.clear();
 			}
@@ -4304,7 +4304,7 @@ public:
 			dbg_msg("sql", "Can't get top10 (MySQL Error: %s)", e.what());
 			return false;
 		}
-		
+
 		return true;
 	}
 };
@@ -4323,7 +4323,7 @@ private:
 	int m_ClientID;
 	int m_Type;
 	CSqlString<64> m_sType;
-	
+
 public:
 	CSqlJob_Server_ShowTop10Clans(CServer* pServer, int ClientID, const char* Type, int TypeGet)
 	{
@@ -4338,8 +4338,8 @@ public:
 		char aBuf[256];
 		try
 		{
-			int SortTop = m_Type == 2 ? 5 : 10;		
-			str_format(aBuf, sizeof(aBuf), 
+			int SortTop = m_Type == 2 ? 5 : 10;
+			str_format(aBuf, sizeof(aBuf),
 				"SELECT %s, Clanname, LeaderName FROM tw_Clans "
 				"ORDER BY %s DESC LIMIT %d;",
 				m_sType.ClrStr(), m_sType.ClrStr(), SortTop);
@@ -4352,18 +4352,18 @@ public:
 				int Level = (int)pSqlServer->GetResults()->getInt(m_sType.ClrStr());
 
 				dynamic_string Buffer;
-				m_pServer->Localization()->Format(Buffer, m_pServer->GetClientLanguage(m_ClientID), _("Rank {int:Rank} - {str:Name} {int:Count} Leader {str:Leader}"), 
+				m_pServer->Localization()->Format(Buffer, m_pServer->GetClientLanguage(m_ClientID), _("Rank {int:Rank} - {str:Name} {int:Count} Leader {str:Leader}"),
 					"Rank", &Rank, "Name", pSqlServer->GetResults()->getString("Clanname").c_str(), "Count", &Level, "Leader", pSqlServer->GetResults()->getString("LeaderName").c_str());
-			
+
 				if(m_Type == 1)
 				{
 					CServer::CGameServerCmd* pCmd = new CGameServerCmd_AddLocalizeVote_Language(m_ClientID, "null", _(Buffer.buffer()));
 					m_pServer->AddGameServerCmd(pCmd);
 				}
 				else
-				{	
+				{
 					CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(-1, CHATCATEGORY_DEFAULT, _(Buffer.buffer()));
-					m_pServer->AddGameServerCmd(pCmd);	
+					m_pServer->AddGameServerCmd(pCmd);
 				}
 				Buffer.clear();
 			}
@@ -4388,7 +4388,7 @@ class CSqlJob_Server_GetTopClanHouse : public CSqlJob
 {
 private:
 	CServer* m_pServer;
-	
+
 public:
 	CSqlJob_Server_GetTopClanHouse(CServer* pServer)
 	{
@@ -4405,25 +4405,25 @@ public:
 			{
 				int ClanID = (int)pSqlServer->GetResults()->getInt("ClanID");
 				m_pServer->m_HouseClanID[House] = ClanID;
-			
+
 				char aBuf[128];
 				if(m_pServer->m_HouseClanID[House] != m_pServer->m_HouseOldClanID[House])
 				{
 					str_format(aBuf, sizeof(aBuf), "[House#%d] Rich Clan %s got / Clan %s lose!", House,  m_pServer->GetClanName(ClanID), m_pServer->GetClanName(m_pServer->m_HouseOldClanID[House]));
-				
+
 					CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(-1, CHATCATEGORY_DEFAULT, _(aBuf));
 					m_pServer->AddGameServerCmd(pCmd);
 				}
 				else
 				{
 					str_format(aBuf, sizeof(aBuf), "[House#%d] Rich Clan %s saved house / No war!", House,  m_pServer->GetClanName(ClanID));
-				
+
 					CServer::CGameServerCmd* pCmd = new CGameServerCmd_SendChatTarget_Language(-1, CHATCATEGORY_DEFAULT, _(aBuf));
 					m_pServer->AddGameServerCmd(pCmd);
 				}
 				m_pServer->m_HouseOldClanID[House] = ClanID;
 				House++;
-			} 
+			}
 		}
 		catch (sql::SQLException &e)
 		{
@@ -4433,7 +4433,7 @@ public:
 		return true;
 	}
 };
-void CServer::GetTopClanHouse() 
+void CServer::GetTopClanHouse()
 {
 	CSqlJob* pJob = new CSqlJob_Server_GetTopClanHouse(this);
 	pJob->Start();
@@ -4453,7 +4453,7 @@ int CServer::GetOwnHouse(int ClientID)
 	if(GetClanID(ClientID) == m_HouseClanID[1])
 		return 1;
 	if(GetClanID(ClientID) == m_HouseClanID[2])
-		return 2;	
+		return 2;
 	return -1;
 }
 

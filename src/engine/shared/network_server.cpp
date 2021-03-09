@@ -33,7 +33,7 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int Ma
 	m_MaxClientsPerIP = MaxClientsPerIP;
 
 	secure_random_fill(m_SecurityTokenSeed, sizeof(m_SecurityTokenSeed));
-	
+
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
 		m_aSlots[i].m_Connection.Init(m_Socket, true);
 
@@ -233,7 +233,7 @@ int CNetServer::TryAcceptClient(NETADDR &Addr, SECURITY_TOKEN SecurityToken)
 	}
 
 	int Slot = -1;
-	for(int i = 0; i < MaxClients()-MAX_BOTS; i++)
+	for(int i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
 		{
@@ -351,7 +351,7 @@ int CNetServer::GetClientSlot(const NETADDR &Addr)
 {
 	int Slot = -1;
 
-	for(int i = 0; i < MaxClients()-MAX_BOTS; i++)
+	for(int i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(m_aSlots[i].m_Connection.State() != NET_CONNSTATE_OFFLINE &&
 			m_aSlots[i].m_Connection.State() != NET_CONNSTATE_ERROR &&
@@ -384,7 +384,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 		// no more packets for now
 		if(Bytes <= 0)
 			break;
-				
+
 		// check if we just should drop the packet
 		char aBuf[128];
 		/* if(NetBan() && NetBan()->IsBanned(&Addr, aBuf, sizeof(aBuf)))
@@ -393,7 +393,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 			CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf)+1, NET_SECURITY_TOKEN_UNSUPPORTED);
 			continue;
 		} */
-				
+
 		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
 		{
 			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)

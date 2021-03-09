@@ -78,7 +78,7 @@ void CNpcSold::TickBotAI()
         PlaySound();
         m_BotTimeLastSound = Server()->Tick();
     }
-    
+
     EmoteNormal = EMOTE_HAPPY;
 
     // ОЧИСТКА ДЕЙСТВИЙ
@@ -97,22 +97,22 @@ void CNpcSold::TickBotAI()
 	int Action = rand()%3;
 
     m_BotClientIDFix = -1;
-    
-   
+
+
 	int Dists = distance(LockBotPos, m_Pos);
 	if (Dists < LessDist)
 		LessDist = Dists;
 
-	
+
 	if (Dists >= 400.0f)
 	{
 		vec2 DirPlayer = normalize(LockBotPos - m_Pos);
 		if (DirPlayer.x < 0)
 			m_BotDir = -1;
-		else 
+		else
 			m_BotDir = 1;
-			
-	
+
+
 		if (Dists >= 430.0f)
 		{
 		   //Interact with the envirionment
@@ -158,7 +158,7 @@ void CNpcSold::TickBotAI()
 
 			if (Dist < 400.0f && Dists < 400.0f)
 			{
-				
+
 				if (Dist > 200.0f)
 				{
 					vec2 DirPlayer = normalize(pPlayer->GetCharacter()->m_Pos - m_Pos);
@@ -166,7 +166,7 @@ void CNpcSold::TickBotAI()
 						m_BotDir = -1;
 					else
 						m_BotDir = 1;
-						
+
 					m_Input.m_Hook = 1;
 				}
 				else
@@ -180,9 +180,9 @@ void CNpcSold::TickBotAI()
 
 				PlayerFound = true;
 			}
-		}	
-		
-		for (int i=0; i<g_Config.m_SvMaxClients-MAX_BOTS; i++)
+		}
+
+		for (int i = 0; i < MAX_PLAYERS; i++)
 		{
 			CPlayer *pPlayer = GameServer()->m_apPlayers[i];
 			if (!pPlayer || !pPlayer->GetCharacter() || pPlayer->m_Search || (pPlayer->IsBot() && pPlayer->GetBotType() == BOT_NPC))
@@ -238,7 +238,7 @@ void CNpcSold::TickBotAI()
 				m_BotDir = 0;
 
 			m_BotTimeLastOption = Server()->Tick();
-			
+
 			if(Action == 2)
 				m_BotTimeLastOption = Server()->Tick();
 		}

@@ -12,7 +12,7 @@
 #include <game/collision.h>
 #include <game/gamecore.h>
 #include <iostream>
-#include "gamemodes/mod.h"  
+#include "gamemodes/mod.h"
 #include <game/server/entities/loltext.h>
 #define BOSSID 62
 
@@ -68,14 +68,14 @@ CGameContext::~CGameContext()
 void CGameContext::ClearVotes(int ClientID)
 {
 	m_PlayerVotes[ClientID].clear();
-	
+
 	// send vote options
 	CNetMsg_Sv_VoteClearOptions ClearMsg;
 	Server()->SendPackMsg(&ClearMsg, MSGFLAG_VITAL, ClientID);
 }
 
 void CGameContext::Clear()
-{	
+{
 	CTuningParams Tuning = m_Tuning;
 
 	m_Resetting = true;
@@ -84,7 +84,7 @@ void CGameContext::Clear()
 	new (this) CGameContext(RESET);
 
 	m_Tuning = Tuning;
-	
+
 	for(int i=0; i<MAX_CLIENTS; i++)
 	{
 		m_BroadcastStates[i].m_NoChangeTick = 0;
@@ -93,7 +93,7 @@ void CGameContext::Clear()
 		m_BroadcastStates[i].m_PrevMessage[0] = 0;
 		m_BroadcastStates[i].m_NextMessage[0] = 0;
 	}
-} 
+}
 
 class CCharacter *CGameContext::GetPlayerChar(int ClientID)
 {
@@ -162,9 +162,9 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 				float Dmg = 6 * l;
 				if((int)Dmg)
 				{
-					if(m_apPlayers[Owner] && m_apPlayers[Owner]->GetCharacter() && m_apPlayers[Owner]->GetCharacter()->m_ActiveWeapon == WEAPON_SHOTGUN)	
-						Dmg = (int)(Dmg/60);	
-						
+					if(m_apPlayers[Owner] && m_apPlayers[Owner]->GetCharacter() && m_apPlayers[Owner]->GetCharacter()->m_ActiveWeapon == WEAPON_SHOTGUN)
+						Dmg = (int)(Dmg/60);
+
 					apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg , Owner, Weapon, TakeDamageMode);
 				}
 			}
@@ -193,15 +193,15 @@ void CGameContext::CreateExplosionDisk(vec2 Pos, float InnerRadius, float Damage
 			vec2 ForceDir(0,1);
 			float l = length(Diff);
 			l = 1-clamp((l-InnerRadius)/(DamageRadius-InnerRadius), 0.0f, 1.0f);
-			
+
 			if(l)
 				ForceDir = normalize(Diff);
-			
+
 			float DamageToDeal = 1 + ((Damage - 1) * l);
 			apEnts[i]->TakeDamage(ForceDir*Force*l, DamageToDeal, Owner, Weapon, TakeDamageMode);
 		}
 	}
-	
+
 	float CircleLength = 2.0*pi*max(DamageRadius-135.0f, 0.0f);
 	int NumSuroundingExplosions = CircleLength/32.0f;
 	float AngleStart = random_float()*pi*2.0f;
@@ -286,16 +286,16 @@ void CGameContext::SendChatTarget_Localization(int To, int Category, const char*
 {
 	int Start = (To < 0 ? 0 : To);
 	int End = (To < 0 ? MAX_CLIENTS : To+1);
-	
+
 	CNetMsg_Sv_Chat Msg;
 	Msg.m_Team = 0;
 	Msg.m_ClientID = -1;
-	
+
 	dynamic_string Buffer;
-	
+
 	va_list VarArgs;
 	va_start(VarArgs, pText);
-	
+
 	for(int i = Start; i < End; i++)
 	{
 		if(m_apPlayers[i])
@@ -320,12 +320,12 @@ void CGameContext::SendChatTarget_Localization(int To, int Category, const char*
 					break;
 			}
 			Server()->Localization()->Format_VL(Buffer, m_apPlayers[i]->GetLanguage(), pText, VarArgs);
-			
+
 			Msg.m_pMessage = Buffer.buffer();
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
 		}
 	}
-	
+
 	Buffer.clear();
 	va_end(VarArgs);
 }
@@ -334,13 +334,13 @@ void CGameContext::SendChatTarget_Localization(int To, int Category, const char*
 void CGameContext::AddVote_Localization(int To, const char* aCmd, const char* pText, ...)
 {
 	int Start = (To < 0 ? 0 : To);
-	int End = (To < 0 ? MAX_NOBOT : To+1);
-	
+	int End = (To < 0 ? MAX_PLAYERS : To+1);
+
 	dynamic_string Buffer;
-	
+
 	va_list VarArgs;
 	va_start(VarArgs, pText);
-	
+
 	for(int i = Start; i < End; i++)
 	{
 		if(m_apPlayers[i])
@@ -350,7 +350,7 @@ void CGameContext::AddVote_Localization(int To, const char* aCmd, const char* pT
 			AddVote(Buffer.buffer(), aCmd, i);
 		}
 	}
-	
+
 	Buffer.clear();
 	va_end(VarArgs);
 }
@@ -358,13 +358,13 @@ void CGameContext::AddVote_Localization(int To, const char* aCmd, const char* pT
 void CGameContext::AddVoteMenu_Localization(int To, int MenuID, int Type, const char* pText, ...)
 {
 	int Start = (To < 0 ? 0 : To);
-	int End = (To < 0 ? MAX_NOBOT : To+1);
-	
+	int End = (To < 0 ? MAX_PLAYERS : To+1);
+
 	dynamic_string Buffer;
-	
+
 	va_list VarArgs;
 	va_start(VarArgs, pText);
-	
+
 	for(int i = Start; i < End; i++)
 	{
 		if(m_apPlayers[i])
@@ -382,29 +382,29 @@ void CGameContext::AddVoteMenu_Localization(int To, int MenuID, int Type, const 
 			{
 				char Buf[8];
 				str_format(Buf, sizeof(Buf), "set%d", MenuID);
-				AddVote(Buffer.buffer(), Buf, i);					
+				AddVote(Buffer.buffer(), Buf, i);
 			}
 			else if(Type == BUYITEMONLY)
 			{
 				char Buf[8];
 				str_format(Buf, sizeof(Buf), "bon%d", MenuID);
-				AddVote(Buffer.buffer(), Buf, i);				
+				AddVote(Buffer.buffer(), Buf, i);
 			}
 			else if(Type == SELLITEMWORK)
 			{
 				char Buf[8];
 				str_format(Buf, sizeof(Buf), "seli%d", MenuID);
-				AddVote(Buffer.buffer(), Buf, i);				
+				AddVote(Buffer.buffer(), Buf, i);
 			}
 			else if(Type == CRAFTONLY)
 			{
 				char Buf[8];
 				str_format(Buf, sizeof(Buf), "cra%d", MenuID);
-				AddVote(Buffer.buffer(), Buf, i);				
+				AddVote(Buffer.buffer(), Buf, i);
 			}
 		}
 	}
-	
+
 	Buffer.clear();
 	va_end(VarArgs);
 }
@@ -412,17 +412,17 @@ void CGameContext::AddVoteMenu_Localization(int To, int MenuID, int Type, const 
 void CGameContext::SendChatTarget_Localization_P(int To, int Category, int Number, const char* pText, ...)
 {
 	int Start = (To < 0 ? 0 : To);
-	int End = (To < 0 ? MAX_NOBOT : To+1);
-	
+	int End = (To < 0 ? MAX_PLAYERS : To+1);
+
 	CNetMsg_Sv_Chat Msg;
 	Msg.m_Team = 0;
 	Msg.m_ClientID = -1;
-	
+
 	dynamic_string Buffer;
-	
+
 	va_list VarArgs;
 	va_start(VarArgs, pText);
-	
+
 	for(int i = Start; i < End; i++)
 	{
 		if(m_apPlayers[i])
@@ -435,12 +435,12 @@ void CGameContext::SendChatTarget_Localization_P(int To, int Category, int Numbe
 					break;
 			}
 			Server()->Localization()->Format_VLP(Buffer, m_apPlayers[i]->GetLanguage(), Number, pText, VarArgs);
-			
+
 			Msg.m_pMessage = Buffer.buffer();
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
 		}
 	}
-	
+
 	Buffer.clear();
 	va_end(VarArgs);
 }
@@ -450,7 +450,7 @@ void CGameContext::SendMOTD(int To, const char* pText)
 	if(m_apPlayers[To])
 	{
 		CNetMsg_Sv_Motd Msg;
-		
+
 		Msg.m_pMessage = pText;
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, To);
 	}
@@ -461,16 +461,16 @@ void CGameContext::SendMOTD_Localization(int To, const char* pText, ...)
 	if(m_apPlayers[To])
 	{
 		dynamic_string Buffer;
-		
+
 		CNetMsg_Sv_Motd Msg;
-		
+
 		va_list VarArgs;
 		va_start(VarArgs, pText);
-		
+
 		Server()->Localization()->Format_VL(Buffer, m_apPlayers[To]->GetLanguage(), pText, VarArgs);
-	
+
 		va_end(VarArgs);
-		
+
 		Msg.m_pMessage = Buffer.buffer();
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, To);
 		Buffer.clear();
@@ -481,12 +481,12 @@ void CGameContext::SendGuide(int ClientID, int BossType)
 {
 	if(!m_apPlayers[ClientID])
 		return;
-	
+
 	int arghealth = 0;
 	const char* argtext = "null";
 	const char* pLanguage = m_apPlayers[ClientID]->GetLanguage();
-	
-	dynamic_string Buffer;		
+
+	dynamic_string Buffer;
 	if(BossType == BOT_BOSSSLIME)
 	{
 		if(!g_Config.m_SvCityStart)
@@ -503,9 +503,9 @@ void CGameContext::SendGuide(int ClientID, int BossType)
 		}
 	}
 	int Time = m_BossStartTick/Server()->TickSpeed();
-	SendMOTD_Localization(ClientID, "Guide / Boss: {str:name}\nHealth sum level*{int:hp}\nRecomended class: {str:rclass}\n\n{str:guide}\n\n\nWait players for raid {int:siska} sec.", 
+	SendMOTD_Localization(ClientID, "Guide / Boss: {str:name}\nHealth sum level*{int:hp}\nRecomended class: {str:rclass}\n\n{str:guide}\n\n\nWait players for raid {int:siska} sec.",
 		"name", GetBossName(m_BossType), "hp", &arghealth, "rclass", argtext, "guide", Buffer.buffer(), "siska", &Time);
-		
+
 	Buffer.clear();
 }
 
@@ -515,7 +515,7 @@ void CGameContext::AddBroadcast(int ClientID, const char* pText, int Priority, i
 	{
 		if(m_BroadcastStates[ClientID].m_TimedPriority > Priority)
 			return;
-			
+
 		str_copy(m_BroadcastStates[ClientID].m_TimedMessage, pText, sizeof(m_BroadcastStates[ClientID].m_TimedMessage));
 		m_BroadcastStates[ClientID].m_LifeSpanTick = LifeSpan;
 		m_BroadcastStates[ClientID].m_TimedPriority = Priority;
@@ -524,7 +524,7 @@ void CGameContext::AddBroadcast(int ClientID, const char* pText, int Priority, i
 	{
 		if(m_BroadcastStates[ClientID].m_Priority > Priority)
 			return;
-			
+
 		str_copy(m_BroadcastStates[ClientID].m_NextMessage, pText, sizeof(m_BroadcastStates[ClientID].m_NextMessage));
 		m_BroadcastStates[ClientID].m_Priority = Priority;
 	}
@@ -533,8 +533,8 @@ void CGameContext::AddBroadcast(int ClientID, const char* pText, int Priority, i
 void CGameContext::SendBroadcast(int To, const char *pText, int Priority, int LifeSpan)
 {
 	int Start = (To < 0 ? 0 : To);
-	int End = (To < 0 ? MAX_NOBOT : To+1);
-	
+	int End = (To < 0 ? MAX_PLAYERS : To+1);
+
 	for(int i = Start; i < End; i++)
 	{
 		if(m_apPlayers[i])
@@ -555,13 +555,13 @@ void CGameContext::ClearBroadcast(int To, int Priority)
 void CGameContext::SendBroadcast_Localization(int To, int Priority, int LifeSpan, const char* pText, ...)
 {
 	int Start = (To < 0 ? 0 : To);
-	int End = (To < 0 ? MAX_NOBOT : To+1);
-	
+	int End = (To < 0 ? MAX_PLAYERS : To+1);
+
 	dynamic_string Buffer;
-	
+
 	va_list VarArgs;
 	va_start(VarArgs, pText);
-	
+
 	for(int i = Start; i < End; i++)
 	{
 		if(m_apPlayers[i])
@@ -571,7 +571,7 @@ void CGameContext::SendBroadcast_Localization(int To, int Priority, int LifeSpan
 			AddBroadcast(i, Buffer.buffer(), Priority, LifeSpan);
 		}
 	}
-	
+
 	Buffer.clear();
 	va_end(VarArgs);
 }
@@ -580,7 +580,7 @@ void CGameContext::SendBroadcast_LStat(int To, int Priority, int LifeSpan, int T
 {
 	if(!m_apPlayers[To])
 		return;
-		
+
 	if(!m_apPlayers[To]->GetCharacter() || m_apPlayers[To]->IsBot())
 		return;
 
@@ -588,7 +588,7 @@ void CGameContext::SendBroadcast_LStat(int To, int Priority, int LifeSpan, int T
 	float getlv = (m_apPlayers[To]->AccData.Exp*100.0)/Optmem;
 	int getl = (int)getlv;
 	const char *Level = LevelString(100, (int)getlv, 10, '*', ' ');
-	
+
 	getlv = (m_apPlayers[To]->m_AngryWroth*100.0)/250;
 	const char *Angry = LevelString(100, (int)getlv, 10, '*', ' ');
 
@@ -599,41 +599,41 @@ void CGameContext::SendBroadcast_LStat(int To, int Priority, int LifeSpan, int T
 	dynamic_string Buffer;
 	switch(Type)
 	{
-		case INSHOP: 
+		case INSHOP:
 			Server()->Localization()->Format_L(Buffer, pLanguage, _("Hi {str:name}! You in shop open vote menu"), "name", Server()->ClientName(To), NULL), Buffer.append("\n");
 			break;
-		case EXITSHOP: 
+		case EXITSHOP:
 			Server()->Localization()->Format_L(Buffer, pLanguage, _("Bye {str:name}!"), "name", Server()->ClientName(To), NULL), Buffer.append("\n");
 			break;
-		case INADDMONEY:  
+		case INADDMONEY:
 			Server()->Localization()->Format_L(Buffer, pLanguage, _("Silver +{int:point} points"), "point", &Size, NULL), Buffer.append("\n");
 			break;
-		case INADDEXP:  
+		case INADDEXP:
 			Server()->Localization()->Format_L(Buffer, pLanguage, _("Experience +{int:point} points"), "point", &Size, NULL), Buffer.append("\n");
 			break;
-		case NOTWEAPON:  
+		case NOTWEAPON:
 			Server()->Localization()->Format_L(Buffer, pLanguage, _("You need buy this weapon!"), NULL), Buffer.append("\n");
 			break;
-		case INADDCEXP:  
+		case INADDCEXP:
 		{
 			Server()->Localization()->Format_L(Buffer, pLanguage, _("Exp +{int:point}. Clan +{int:struct} points"), "point", &Size, "struct", &Size2, NULL), Buffer.append("\n");
 		}	break;
 		case INANTIPVP:
 			Server()->Localization()->Format_L(Buffer, pLanguage, _("YOU ENTER ZONE ANTIPVP."), NULL),	Buffer.append("\n");
-			break; 
+			break;
 		case EXITANTIPVP:
-			Server()->Localization()->Format_L(Buffer, pLanguage, _("YOU EXIT ZONE ANTIPVP."), NULL),	Buffer.append("\n"); 
-			break; 
+			Server()->Localization()->Format_L(Buffer, pLanguage, _("YOU EXIT ZONE ANTIPVP."), NULL),	Buffer.append("\n");
+			break;
 		case INCRAFT:
-			Server()->Localization()->Format_L(Buffer, pLanguage, _("Hi {str:name}! You in crafted open vote menu."), "name", Server()->ClientName(To), NULL),	Buffer.append("\n"); 
-			break; 
+			Server()->Localization()->Format_L(Buffer, pLanguage, _("Hi {str:name}! You in crafted open vote menu."), "name", Server()->ClientName(To), NULL),	Buffer.append("\n");
+			break;
 		case INQUEST:
-			Server()->Localization()->Format_L(Buffer, pLanguage, _("Hi {str:name}! You in quest room open vote menu."), "name", Server()->ClientName(To), NULL),	Buffer.append("\n"); 
-			break; 
+			Server()->Localization()->Format_L(Buffer, pLanguage, _("Hi {str:name}! You in quest room open vote menu."), "name", Server()->ClientName(To), NULL),	Buffer.append("\n");
+			break;
 		default: Buffer.clear();
 	}
-		
-	SendBroadcast_Localization(To, Priority, LifeSpan, " \n\nLv: {int:lvl} | Exp: {int:exp}/{int:expl}\n----------------------\n{str:sdata} {int:getl}%\n{str:dataang} Angry\n----------------------\n{str:mana} Mana\nHealth: {int:hp}/{int:hpstart}\n\n\n\n\n\n\n\n\n\n\n\n{str:buff}{str:emp}", 
+
+	SendBroadcast_Localization(To, Priority, LifeSpan, " \n\nLv: {int:lvl} | Exp: {int:exp}/{int:expl}\n----------------------\n{str:sdata} {int:getl}%\n{str:dataang} Angry\n----------------------\n{str:mana} Mana\nHealth: {int:hp}/{int:hpstart}\n\n\n\n\n\n\n\n\n\n\n\n{str:buff}{str:emp}",
 		"lvl", &m_apPlayers[To]->AccData.Level, "exp", &m_apPlayers[To]->AccData.Exp, "expl", &Optmem, "sdata", Level, "getl", &getl, "dataang", Angry, "mana", Mana, "hp", &m_apPlayers[To]->m_Health, "hpstart", &m_apPlayers[To]->m_HealthStart, "buff", Buffer.buffer(),
 		"emp", "                                                                                                                                                                    ");
 
@@ -647,16 +647,16 @@ void CGameContext::SendBroadcast_LChair(int To, int SizeExp, int SizeMoney)
 {
 	if(!m_apPlayers[To] || !m_apPlayers[To]->GetCharacter() || m_apPlayers[To]->IsBot())
 		return;
-				
+
 	int Optmem = m_apPlayers[To]->AccData.Level*m_apPlayers[To]->GetNeedForUp();
 	int Optexp = m_apPlayers[To]->AccData.Exp;
-	
+
 	float getlv = (Optexp*100.0)/Optmem;
 	int getl = (int)getlv;
 	const char *aBuf = LevelString(100, (int)getlv, 5, '*', ' ');
-	
-	dynamic_string Buffer;		
-	SendBroadcast_Localization(To, 105, 100, "{str:buff}{str:sdata}({int:getl}%)\nExp: {int:exp}/{int:expl} +{int:exps}\nSilver: {int:money} +{int:moneys}", 
+
+	dynamic_string Buffer;
+	SendBroadcast_Localization(To, 105, 100, "{str:buff}{str:sdata}({int:getl}%)\nExp: {int:exp}/{int:expl} +{int:exps}\nSilver: {int:money} +{int:moneys}",
 		"buff", Buffer.buffer(), "sdata", aBuf, "getl", &getl, "exp", &m_apPlayers[To]->AccData.Exp, "expl", &Optmem, "exps", &SizeExp, "money", &m_apPlayers[To]->AccData.Money, "moneys", &SizeMoney);
 
 	delete aBuf;
@@ -668,22 +668,22 @@ void CGameContext::SendBroadcast_LBossed(int To, int Priority, int LifeSpan)
 {
 	if(!m_apPlayers[To] || !m_apPlayers[BOSSID])
 		return;
-		
+
 	if(!m_apPlayers[To]->GetCharacter() || m_apPlayers[To]->IsBot())
 		return;
-		
+
 	if(m_apPlayers[BOSSID]->GetCharacter())
 	{
 		int Optmem = m_apPlayers[BOSSID]->m_HealthStart;
 		int Optexp = m_apPlayers[BOSSID]->m_Health;
-		
+
 		float getlv = (Optexp*100.0)/Optmem;
 		int getl = (int)getlv;
 		const char *aBuf = LevelString(100, (int)getlv, 5, ':', ' ');
-			
-		SendBroadcast_Localization(To, Priority, LifeSpan, "{str:sdata}\n({int:getl}%)\nBoss: {str:name} Health: {int:hp}/{int:hpstart}\nYour Health {int:yhp}/{int:yhps}", 
+
+		SendBroadcast_Localization(To, Priority, LifeSpan, "{str:sdata}\n({int:getl}%)\nBoss: {str:name} Health: {int:hp}/{int:hpstart}\nYour Health {int:yhp}/{int:yhps}",
 			"sdata", aBuf, "getl", &getl, "name", GetBossName(m_BossType), "hp", &Optexp, "hpstart", &Optmem, "yhp", &m_apPlayers[To]->m_Health, "yhps", &m_apPlayers[To]->m_HealthStart ,NULL);
-	
+
 		delete aBuf;
 	}
 	else
@@ -693,13 +693,13 @@ void CGameContext::SendBroadcast_LBossed(int To, int Priority, int LifeSpan)
 void CGameContext::SendBroadcast_Localization_P(int To, int Priority, int LifeSpan, int Number, const char* pText, ...)
 {
 	int Start = (To < 0 ? 0 : To);
-	int End = (To < 0 ? MAX_NOBOT : To+1);
-	
+	int End = (To < 0 ? MAX_PLAYERS : To+1);
+
 	dynamic_string Buffer;
-	
+
 	va_list VarArgs;
 	va_start(VarArgs, pText);
-	
+
 	for(int i = Start; i < End; i++)
 	{
 		if(m_apPlayers[i])
@@ -708,7 +708,7 @@ void CGameContext::SendBroadcast_Localization_P(int To, int Priority, int LifeSp
 			AddBroadcast(i, Buffer.buffer(), Priority, LifeSpan);
 		}
 	}
-	
+
 	va_end(VarArgs);
 }
 
@@ -739,7 +739,7 @@ void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText)
 			{
 				int PlayerTeam = CGameContext::CHAT_BLUE;
 				if(m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS) PlayerTeam = CGameContext::CHAT_SPEC;
-				
+
 				if(PlayerTeam == Team)
 				{
 					Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
@@ -767,7 +767,7 @@ void CGameContext::SendWeaponPickup(int ClientID, int Weapon)
 void CGameContext::SendTuningParams(int ClientID)
 {
 	CheckPureTuning();
-	
+
 	CMsgPacker Msg(NETMSGTYPE_SV_TUNEPARAMS);
 	int *pParams = (int *)&m_Tuning;
 	for(unsigned i = 0; i < sizeof(m_Tuning)/sizeof(int); i++)
@@ -787,8 +787,8 @@ void CGameContext::BossTick()
 			m_BossStartTick = 0;
 			m_WinWaitBoss = 0;
 			m_BossType = 0;
-			
-			for(int i = 0; i < MAX_NOBOT; ++i)
+
+			for(int i = 0; i < MAX_PLAYERS; ++i)
 			{
 				if(m_apPlayers[i])
 				{
@@ -799,27 +799,27 @@ void CGameContext::BossTick()
 							m_apPlayers[i]->GetCharacter()->Die(i, WEAPON_WORLD);
 					}
 				}
-			}	
+			}
 		}
 		if(m_WinWaitBoss == 950)
-			DeleteBotBoss();	
+			DeleteBotBoss();
 	}
-	
+
 	// таймер ожидания игроков для рейда
 	if(m_BossStartTick)
-	{		
+	{
 		m_BossStartTick--;
 		if(!GetBossCount())
 		{
 			m_BossStartTick = 0;
 			m_BossStart = false;
-			SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("The boss is canceled, players are not in waiting room"), NULL);	
+			SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("The boss is canceled, players are not in waiting room"), NULL);
 		}
-		
+
 		if(m_BossStartTick == 50)
-		{			
+		{
 			m_BossStart = true;
-			for(int i = 0; i < MAX_NOBOT; ++i)
+			for(int i = 0; i < MAX_PLAYERS; ++i)
 			{
 				if(m_apPlayers[i])
 				{
@@ -828,7 +828,7 @@ void CGameContext::BossTick()
 				}
 			}
 			int CountBoss = GetBossCount();
-			SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("The raid on the boss room started. Players {int:num}"), "num", &CountBoss, NULL);	
+			SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("The raid on the boss room started. Players {int:num}"), "num", &CountBoss, NULL);
 		}
 	}
 
@@ -837,9 +837,9 @@ void CGameContext::BossTick()
 	{
 		m_BossStartTick = 0;
 		m_BossStart = false;
-		
+
 		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("Players die, boss {str:name} won"), "name", GetBossName(m_BossType), NULL);
-		
+
 		m_BossType = 0;
 		DeleteBotBoss();
 	}
@@ -849,7 +849,7 @@ void CGameContext::SendMail(int ClientID, const char* pText, int ItemID, int Ite
 {
 	if(!Server()->IsClientLogged(ClientID))
 		return;
-	
+
 	Server()->SendMail(Server()->GetUserID(ClientID), pText, ItemID, ItemNum);
 	SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("New message see MailBox"), NULL);
 }
@@ -858,29 +858,29 @@ void CGameContext::AreaTick()
 {
 	// Старт игры сюрвиал
 	if(m_AreaStartTick)
-	{	
+	{
 		m_AreaStartTick--;
 		if(m_AreaStartTick == 10)
 		{
 			int count = GetAreaCount();
 			if(count < 2)
 			{
-				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("[Survial] No started need min 2 player's"), NULL);	
-				for(int i = 0; i < MAX_NOBOT; ++i)
+				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("[Survial] No started need min 2 player's"), NULL);
+				for(int i = 0; i < MAX_PLAYERS; ++i)
 				{
 					if(m_apPlayers[i] && m_apPlayers[i]->m_InArea)
 					{
-						m_apPlayers[i]->m_InArea = false;				
+						m_apPlayers[i]->m_InArea = false;
 						if(m_apPlayers[i]->GetCharacter())
-							m_apPlayers[i]->GetCharacter()->Die(i, WEAPON_WORLD);					
+							m_apPlayers[i]->GetCharacter()->Die(i, WEAPON_WORLD);
 					}
-				}				
+				}
 			}
 			else
 			{
 				m_AreaEndGame = 120*Server()->TickSpeed();
 				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("[Survial] Started, {int:num} players"), "num", &count, NULL);
-			}	
+			}
 		}
 	}
 	// Arena уже игра да пидоры
@@ -889,10 +889,10 @@ void CGameContext::AreaTick()
 		m_AreaEndGame--;
 		if(m_AreaEndGame && !GetAreaCount())
 			m_AreaEndGame = 0;
-		
+
 		if(!m_AreaEndGame)
 		{
-			for(int i = 0; i < MAX_NOBOT; ++i)
+			for(int i = 0; i < MAX_PLAYERS; ++i)
 			{
 				if(m_apPlayers[i] && m_apPlayers[i]->m_InArea)
 				{
@@ -900,14 +900,14 @@ void CGameContext::AreaTick()
 					if(m_apPlayers[i]->GetCharacter())
 						m_apPlayers[i]->GetCharacter()->Die(i, WEAPON_WORLD);
 				}
-			}		
-			SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("[Survial] End. No winning player"), NULL);		
+			}
+			SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("[Survial] End. No winning player"), NULL);
 		}
 
 		if(GetAreaCount() == 1)
 		{
 			int is = 0;
-			for(int i = 0; i < MAX_NOBOT; ++i)
+			for(int i = 0; i < MAX_PLAYERS; ++i)
 			{
 				if(m_apPlayers[i] && m_apPlayers[i]->m_InArea)
 				{
@@ -915,34 +915,34 @@ void CGameContext::AreaTick()
 					if(m_apPlayers[i]->GetCharacter())
 					{
 						m_apPlayers[i]->GetCharacter()->Die(i, WEAPON_WORLD);
-						
+
 						switch(m_AreaType)
 						{
-							case 1: 
+							case 1:
 							{
 								GiveItem(i, MONEYBAG, 10);
-								
+
 								int RandGet = rand()%2;
 								if(RandGet == 1)
-									SendMail(i, "Lucky you got item!", RELRINGS, 1);						
+									SendMail(i, "Lucky you got item!", RELRINGS, 1);
 							} break;
-							case 2: 
+							case 2:
 							{
 								GiveItem(i, MONEYBAG, 10);
-								
+
 								int RandGet = rand()%20;
 								if(RandGet == 1)
-									SendMail(i, "Lucky you got item!", FREEAZER, 1);	
+									SendMail(i, "Lucky you got item!", FREEAZER, 1);
 							} break;
-						}					
+						}
 					}
 				}
 			}
-			SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("[Survial] Winner {str:name}:"), "name", Server()->ClientName(is), NULL);	
+			SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("[Survial] Winner {str:name}:"), "name", Server()->ClientName(is), NULL);
 			m_AreaEndGame = 0;
 		}
 	}
-	// старт арены 
+	// старт арены
 	if(Server()->Tick() % (1 * Server()->TickSpeed() * 600) == 0)
 		StartArea(120, rand()%2+1);
 }
@@ -966,18 +966,18 @@ void CGameContext::OnTick()
 
 			m_apPlayers[i]->Tick();
 			m_apPlayers[i]->PostTick();
-			
+
 			if(m_InviteTick[i] > 0)
 			{
 				if(m_InviteTick[i] == 1)
 				{
 					m_InviteTick[i] = 0;
-					
+
 					CNetMsg_Sv_VoteSet Msg;
 					Msg.m_Timeout = 0;
 					Msg.m_pDescription = "";
 					Msg.m_pReason = "";
-					Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);	
+					Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
 				}
 				else
 				{
@@ -986,9 +986,9 @@ void CGameContext::OnTick()
 			}
 		}
 	}
-	
+
 	//Check for new broadcast
-	for(int i=0; i<MAX_NOBOT; i++)
+	for(int i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(m_apPlayers[i])
 		{
@@ -996,7 +996,7 @@ void CGameContext::OnTick()
 			{
 				str_copy(m_BroadcastStates[i].m_NextMessage, m_BroadcastStates[i].m_TimedMessage, sizeof(m_BroadcastStates[i].m_NextMessage));
 			}
-			
+
 			//Send broadcast only if the message is different, or to fight auto-fading
 			if(
 				str_comp(m_BroadcastStates[i].m_PrevMessage, m_BroadcastStates[i].m_NextMessage) != 0 ||
@@ -1006,18 +1006,18 @@ void CGameContext::OnTick()
 				CNetMsg_Sv_Broadcast Msg;
 				Msg.m_pMessage = m_BroadcastStates[i].m_NextMessage;
 				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
-				
+
 				str_copy(m_BroadcastStates[i].m_PrevMessage, m_BroadcastStates[i].m_NextMessage, sizeof(m_BroadcastStates[i].m_PrevMessage));
-				
+
 				m_BroadcastStates[i].m_NoChangeTick = 0;
 			}
 			else
 				m_BroadcastStates[i].m_NoChangeTick++;
-			
+
 			//Update broadcast state
 			if(m_BroadcastStates[i].m_LifeSpanTick > 0)
 				m_BroadcastStates[i].m_LifeSpanTick--;
-			
+
 			if(m_BroadcastStates[i].m_LifeSpanTick <= 0)
 			{
 				m_BroadcastStates[i].m_TimedMessage[0] = 0;
@@ -1045,11 +1045,11 @@ void CGameContext::OnTick()
 
 	if(Server()->Tick() % (1 * Server()->TickSpeed() * 610) == 0)
 	{
-		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("### Server Information:"), NULL);	
-		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("Warning!! New Rules:"), NULL);	
-		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("Play only one server, if play 1-250 and play 250-500"), NULL);	
-		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("Account deleted, and if you leader clan reform."), NULL);	
-		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("Server version: 1.1 stable by Kurosio."), NULL);	
+		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("### Server Information:"), NULL);
+		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("Warning!! New Rules:"), NULL);
+		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("Play only one server, if play 1-250 and play 250-500"), NULL);
+		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("Account deleted, and if you leader clan reform."), NULL);
+		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("Server version: 1.1 stable by Kurosio."), NULL);
 	}
 
 	// вывод топ листа раз в 5 минут
@@ -1058,25 +1058,25 @@ void CGameContext::OnTick()
 		switch(rand()%7)
 		{
 			case 0:
-				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 players sorted {str:name}:"), "name", "Level", NULL);	
+				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 players sorted {str:name}:"), "name", "Level", NULL);
 				Server()->ShowTop10(25, "Level", 2); break;
 			case 1:
-				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 players sorted {str:name}:"), "name", "Gold", NULL);	
+				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 players sorted {str:name}:"), "name", "Gold", NULL);
 				Server()->ShowTop10(25, "Gold", 2); break;
 			case 2:
-				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 players sorted {str:name}:"), "name", "Win Area", NULL);	
-				Server()->ShowTop10(25, "WinArea", 2); break;		
+				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 players sorted {str:name}:"), "name", "Win Area", NULL);
+				Server()->ShowTop10(25, "WinArea", 2); break;
 			case 3:
-				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 players sorted {str:name}:"), "name", "Killing", NULL);	
+				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 players sorted {str:name}:"), "name", "Killing", NULL);
 				Server()->ShowTop10(25, "Killing", 2); break;
 			case 4:
-				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 clans sorted {str:name}:"), "name", "Level", NULL);	
+				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 clans sorted {str:name}:"), "name", "Level", NULL);
 				Server()->ShowTop10Clans(25, "Level", 2); break;
 			case 5:
-				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 clans sorted {str:name}:"), "name", "Relevance", NULL);	
+				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 clans sorted {str:name}:"), "name", "Relevance", NULL);
 				Server()->ShowTop10Clans(25, "Relevance", 2); break;
 			default:
-				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 clans sorted {str:name}:"), "name", "Gold", NULL);	
+				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("(* ^ ω ^) Top 5 clans sorted {str:name}:"), "name", "Gold", NULL);
 				Server()->ShowTop10Clans(25, "Money", 2); break;
 		}
 	}
@@ -1115,10 +1115,10 @@ void CGameContext::OnClientEnter(int ClientID)
 	//world.insert_entity(&players[client_id]);
 	m_apPlayers[ClientID]->m_IsInGame = true;
 	m_apPlayers[ClientID]->Respawn();
-	
+
 	ResetVotes(ClientID, NOAUTH);
 	Server()->FirstInit(ClientID);
-	
+
 	SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:PlayerName} entered and joined the spectators"), "PlayerName", Server()->ClientName(ClientID), NULL);
 	SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Welcome! Please login or create new account /cmdlist"), NULL);
 }
@@ -1126,7 +1126,7 @@ void CGameContext::OnClientEnter(int ClientID)
 void CGameContext::OnClientConnected(int ClientID)
 {
 	const int StartTeam = g_Config.m_SvTournamentMode ? TEAM_SPECTATORS : m_pController->GetAutoTeam(ClientID);
-	
+
 	if(!m_apPlayers[ClientID])
 		m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, StartTeam);
 	else
@@ -1173,10 +1173,10 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 {
 	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgID, pUnpacker);
 	CPlayer *pPlayer = m_apPlayers[ClientID];
-	
+
 	if(!pRawMsg)
 	{
-		if(g_Config.m_Debug) 
+		if(g_Config.m_Debug)
 		{
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "dropped weird message '%s' (%d), failed on '%s'", m_NetObjHandler.GetMsgName(MsgID), MsgID, m_NetObjHandler.FailedMsgOn());
@@ -1200,7 +1200,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				if(pPlayer->GetTeam() == TEAM_SPECTATORS) Team = CGameContext::CHAT_SPEC;
 				else Team = CGameContext::CHAT_BLUE;
 			}
-			
+
 			// trim right and set maximum length to 271 utf8-characters
 			int Length = 0;
 			const char *p = pMsg->m_pMessage;
@@ -1234,8 +1234,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				return;
 
 			pPlayer->m_LastChat = Server()->Tick();
-		
-		
+
+
 			if(str_comp_num(pMsg->m_pMessage, "/msg ", 5) == 0)
 			{
 				PrivateMessage(pMsg->m_pMessage+5, ClientID, (Team != CGameContext::CHAT_ALL));
@@ -1247,17 +1247,17 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			else if(pMsg->m_pMessage[0]=='/')
 				pPlayer->m_pChatCmd->ChatCmd(pMsg);
 			else
-				SendChat(ClientID, Team, pMsg->m_pMessage);		
+				SendChat(ClientID, Team, pMsg->m_pMessage);
 		}
 		else if(MsgID == NETMSGTYPE_CL_CALLVOTE)
 		{
 			CNetMsg_Cl_CallVote *pMsg = (CNetMsg_Cl_CallVote *)pRawMsg;
 			const char *pReason = pMsg->m_Reason[0] ? pMsg->m_Reason : "No reason given";
-			
+
 			if(str_comp_nocase(pMsg->m_Type, "kick") == 0)
 			{
 				int KickID = str_toint(pMsg->m_Value);
-				if(KickID < 0 || KickID >= MAX_NOBOT || !m_apPlayers[KickID])
+				if(KickID < 0 || KickID >= MAX_PLAYERS || !m_apPlayers[KickID])
 				{
 					SendChatTarget(ClientID, "Invalid client id to kick");
 					return;
@@ -1287,7 +1287,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				char aDesc[VOTE_DESC_LENGTH] = {0};
 				char aCmd[VOTE_CMD_LENGTH] = {0};
 
-				
+
 
 				if(str_comp_nocase(pMsg->m_Type, "option") == 0)
 				{
@@ -1297,7 +1297,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 						{
 							str_format(aDesc, sizeof(aDesc), "%s", m_PlayerVotes[ClientID][i].m_aDescription);
 							str_format(aCmd, sizeof(aCmd), "%s", m_PlayerVotes[ClientID][i].m_aCommand);
-				
+
 							m_PlayerVotes[ClientID][i].data;
 						}
 					}
@@ -1305,24 +1305,24 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 				if(str_comp(aCmd, "null") == 0)
 					return;
-				
+
 				// ИНФОРМАЦИЯ ФУНКЦИИ
-				
+
 				else if(str_comp(aCmd, "info") == 0)
 				{
 					const char* pLanguage = m_apPlayers[ClientID]->GetLanguage();
-	
+
 					dynamic_string Buffer;
-					Server()->Localization()->Format_L(Buffer, pLanguage, _("All owners InfClass"), NULL); 
+					Server()->Localization()->Format_L(Buffer, pLanguage, _("All owners InfClass"), NULL);
 					Buffer.append("\n\n");
-					Server()->Localization()->Format_L(Buffer, pLanguage, _("Main contributors:\nNajvlad - Mapper\nRem1x - Helping\nMatodor - Helping\nKurosio - Code, Owner"), NULL); 
+					Server()->Localization()->Format_L(Buffer, pLanguage, _("Main contributors:\nNajvlad - Mapper\nRem1x - Helping\nMatodor - Helping\nKurosio - Code, Owner"), NULL);
 					Buffer.append("\n\n");
-					Server()->Localization()->Format_L(Buffer, pLanguage, _("Created Modify rAzataz by Kurosio"), NULL); 
+					Server()->Localization()->Format_L(Buffer, pLanguage, _("Created Modify rAzataz by Kurosio"), NULL);
 					Buffer.append("\n\n");
-	
+
 					SendMOTD(ClientID, Buffer.buffer());
 					return;
-				}			
+				}
 
 				else if(str_comp(aCmd, "rrul") == 0)
 				{
@@ -1335,35 +1335,35 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					SendChatTarget(ClientID, "Don't buily players!");
 					SendChatTarget(ClientID, "Don't interfere, in game other's players!");
 					return;
-				}					
+				}
 
 				else if(str_comp(aCmd, "help") == 0)
 				{
 					const char* pLanguage = m_apPlayers[ClientID]->GetLanguage();
-	
+
 					dynamic_string Buffer;
-	
-					Server()->Localization()->Format_L(Buffer, pLanguage, _("You need login or create new account."), NULL); 
+
+					Server()->Localization()->Format_L(Buffer, pLanguage, _("You need login or create new account."), NULL);
 					Buffer.append("\n\n");
-					Server()->Localization()->Format_L(Buffer, pLanguage, _("/register <name> <pass> - create new account"), NULL); 
+					Server()->Localization()->Format_L(Buffer, pLanguage, _("/register <name> <pass> - create new account"), NULL);
 					Buffer.append("\n");
-					Server()->Localization()->Format_L(Buffer, pLanguage, _("/login <name> <pass> - log in account"), NULL); 
+					Server()->Localization()->Format_L(Buffer, pLanguage, _("/login <name> <pass> - log in account"), NULL);
 					Buffer.append("\n");
-					Server()->Localization()->Format_L(Buffer, pLanguage, _("/logout - logout account"), NULL); 
+					Server()->Localization()->Format_L(Buffer, pLanguage, _("/logout - logout account"), NULL);
 					Buffer.append("\n\n");
 
 					SendMOTD(ClientID, Buffer.buffer());
 					return;
-				}	
-				
+				}
+
 				// МЕНЮ ФУНКЦИИ
-						
+
 				else if(str_comp(aCmd, "back") == 0)
 				{
 					ResetVotes(ClientID, m_apPlayers[ClientID]->m_LastVotelist);
 					return;
-				}		
-												
+				}
+
 
 				// КЛАН ФУНКЦИИ
 				else if(str_comp(aCmd, "houseopen") == 0)
@@ -1375,22 +1375,22 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					}
 					if(Server()->SetOpenHouse(Server()->GetOwnHouse(ClientID)))
 					{
-						SendChatTarget_Localization(-1, -1, _("Clan {str:name} {str:type} House!"), 
+						SendChatTarget_Localization(-1, -1, _("Clan {str:name} {str:type} House!"),
 							"name", Server()->GetClanName(Server()->GetClanID(ClientID)), "type", Server()->GetOpenHouse(Server()->GetOwnHouse(ClientID)) ? "OPEN" : "CLOSE");
 					}
 					ResetVotes(ClientID, CHOUSE);
 					return;
-				}				
+				}
 
 				else if(str_comp(aCmd, "ckickoff") == 0)
 				{
 					if(Server()->GetLeader(ClientID, Server()->GetClanID(ClientID)))
-					{	
+					{
 						if(str_comp_nocase(m_apPlayers[ClientID]->m_SelectPlayer, Server()->ClientName(ClientID)) == 0)
 							return;
-						
+
 						bool Type = false;
-						for(int i = 0; i < MAX_NOBOT; ++i)
+						for(int i = 0; i < MAX_PLAYERS; ++i)
 						{
 							if(m_apPlayers[i])
 							{
@@ -1398,78 +1398,78 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 									Type = true;
 							}
 						}
-					
+
 						if(Type) SendChatClan(Server()->GetClanID(ClientID), "Leader kicked player {str:name}", "name", m_apPlayers[ClientID]->m_SelectPlayer);
 						else SendChatClan(Server()->GetClanID(ClientID), "Leader kicked offline {str:name}", "name", m_apPlayers[ClientID]->m_SelectPlayer);
 
-						Server()->ExitClanOff(ClientID, m_apPlayers[ClientID]->m_SelectPlayer);			
+						Server()->ExitClanOff(ClientID, m_apPlayers[ClientID]->m_SelectPlayer);
 						ResetVotes(ClientID, CLANLIST);
 					}
 					else
 						SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("# You not leader this clan"), NULL);
-												
+
 					return;
-				}	
-				
+				}
+
 				else if(str_comp(aCmd, "cgetleader") == 0)
 				{
 					if(Server()->GetLeader(ClientID, Server()->GetClanID(ClientID)))
-					{	
+					{
 						if(str_comp_nocase(m_apPlayers[ClientID]->m_SelectPlayer, Server()->ClientName(ClientID)) == 0)
 							return;
-						
+
 						bool heh = false;
-						for(int i = 0; i < MAX_NOBOT; ++i){
+						for(int i = 0; i < MAX_PLAYERS; ++i){
 							if(m_apPlayers[i]){
 								if(Server()->GetClanID(i) == Server()->GetClanID(ClientID)){
-										
+
 									heh = true;
-									SendChatTarget_Localization(i, CHATCATEGORY_DEFAULT, _("New leader clan {str:name}"), "name", m_apPlayers[ClientID]->m_SelectPlayer, NULL);	
+									SendChatTarget_Localization(i, CHATCATEGORY_DEFAULT, _("New leader clan {str:name}"), "name", m_apPlayers[ClientID]->m_SelectPlayer, NULL);
 								}
 							}
 						}
-						
+
 						if(heh)
 						{
-							Server()->ChangeLeader(Server()->GetClanID(ClientID), m_apPlayers[ClientID]->m_SelectPlayer); 
+							Server()->ChangeLeader(Server()->GetClanID(ClientID), m_apPlayers[ClientID]->m_SelectPlayer);
 							ResetVotes(ClientID, CLANLIST);
-							
+
 						}
 					}
 					else
 						SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("# You not leader this clan"), NULL);
-												
+
 					return;
-				}	
-				
+				}
+
 				else if(str_comp(aCmd, "cexit") == 0)
 				{
 					if(Server()->GetLeader(ClientID, Server()->GetClanID(ClientID)))
 					{
-						SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("The leader cannot leave the clan"), NULL);							
+						SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("The leader cannot leave the clan"), NULL);
 						return;
 					}
 					ExitClan(ClientID);
 					return;
-				}	
-				
+				}
+
 				else if(str_comp(aCmd, "uccount") == 0)
-				{						
+				{
 					if(Server()->GetClan(DMAXCOUNTUCLAN, Server()->GetClanID(ClientID)) >= 20)
 						return 	SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Max upgrades"), NULL);
 
-					BuyUpgradeClan(ClientID, (m_apPlayers[ClientID]->GetNeedForUpgClan(DMAXCOUNTUCLAN))*4, DMAXCOUNTUCLAN,"MaxNum");	
+					BuyUpgradeClan(ClientID, (m_apPlayers[ClientID]->GetNeedForUpgClan(DMAXCOUNTUCLAN))*4, DMAXCOUNTUCLAN,"MaxNum");
 					return;
-				}	
+				}
 				else if(str_comp(aCmd, "uaddexp") == 0)
-					BuyUpgradeClan(ClientID, m_apPlayers[ClientID]->GetNeedForUpgClan(DADDEXP), DADDEXP,"ExpAdd");							
+					BuyUpgradeClan(ClientID, m_apPlayers[ClientID]->GetNeedForUpgClan(DADDEXP), DADDEXP,"ExpAdd");
 
 				else if(str_comp(aCmd, "uchair") == 0)
 				{
 					if(!Server()->GetHouse(ClientID))
 						return 	SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Your Clan not House!"), NULL);
 
-					BuyUpgradeClan(ClientID, m_apPlayers[ClientID]->GetNeedForUpgClan(DCHAIRHOUSE)*2, DCHAIRHOUSE,"ChairHouse");							
+					BuyUpgradeClan(ClientID, m_apPlayers[ClientID]->GetNeedForUpgClan(DCHAIRHOUSE)*2, DCHAIRHOUSE,"ChairHouse");
 				}
 
 				else if(str_comp(aCmd, "uspawnhouse") == 0)
@@ -1480,49 +1480,49 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					if(Server()->GetSpawnInClanHouse(ClientID, 0) || Server()->GetSpawnInClanHouse(ClientID, 1))
 						return;
 
-					BuyUpgradeClan(ClientID, 500000, DADDEXP,"SpawnHouse");							
-				}	
+					BuyUpgradeClan(ClientID, 500000, DADDEXP,"SpawnHouse");
+				}
 
 				else if(str_comp(aCmd, "uaddmoney") == 0)
-					BuyUpgradeClan(ClientID, m_apPlayers[ClientID]->GetNeedForUpgClan(DADDMONEY), DADDEXP,"MoneyAdd");	
-								
+					BuyUpgradeClan(ClientID, m_apPlayers[ClientID]->GetNeedForUpgClan(DADDMONEY), DADDEXP,"MoneyAdd");
+
 				else if(str_comp(aCmd, "cm1") == 0)
 				{
-					long int Get = 1000; 
+					long int Get = 1000;
 					if (pReason[0] && isdigit(pReason[0]))
 						Get = atoi (pReason);
-						
-					if(m_apPlayers[ClientID]->AccData.Gold < Get)				
+
+					if(m_apPlayers[ClientID]->AccData.Gold < Get)
 						Get = m_apPlayers[ClientID]->AccData.Gold;
-					
+
 					if(Get < 1 || Get > 100000000)
 						Get = 1000;
-					
+
 					if(m_apPlayers[ClientID]->AccData.Gold > 0)
-					{						
+					{
 						Server()->InitClanID(Server()->GetClanID(ClientID), PLUS, "Money", Get, true);
 
 						m_apPlayers[ClientID]->AccData.Gold -= Get;
 						m_apPlayers[ClientID]->AccData.ClanAdded += Get;
-						SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You added in bank {int:count} count"), "count", &Get, NULL);							
-						
+						SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You added in bank {int:count} count"), "count", &Get, NULL);
+
 						UpdateStats(ClientID);
 						ResetVotes(ClientID, AUTH);
 						return;
 					}
-					else SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You do not have that much money"), NULL);							
-					
+					else SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You do not have that much money"), NULL);
+
 					return;
-				}	
+				}
 
 				// КВЕСТЫ ФУНКЦИИ
-				
+
 				else if(str_comp(aCmd, "passquest") == 0)
 				{
 					if(m_apPlayers[ClientID]->AccData.Quest == 1)
 					{
 						if(Server()->GetItemCount(ClientID, PIGPORNO) < QUEST1)
-							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);	
+							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);
 						else
 						{
 							m_apPlayers[ClientID]->ExpAdd(4000);
@@ -1536,7 +1536,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					if(m_apPlayers[ClientID]->AccData.Quest == 2)
 					{
 						if(Server()->GetItemCount(ClientID, PIGPORNO) < QUEST2)
-							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);	
+							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);
 						else
 						{
 							m_apPlayers[ClientID]->ExpAdd(4000);
@@ -1550,7 +1550,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					else if(m_apPlayers[ClientID]->AccData.Quest == 3)
 					{
 						if(Server()->GetItemCount(ClientID, KWAHGANDON) < QUEST3)
-							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);	
+							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);
 						else
 						{
 							m_apPlayers[ClientID]->ExpAdd(8000);
@@ -1564,7 +1564,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					else if(m_apPlayers[ClientID]->AccData.Quest == 4)
 					{
 						if(Server()->GetItemCount(ClientID, KWAHGANDON) < QUEST4)
-							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);	
+							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);
 						else
 						{
 							m_apPlayers[ClientID]->ExpAdd(8000);
@@ -1578,7 +1578,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					else if(m_apPlayers[ClientID]->AccData.Quest == 5)
 					{
 						if(Server()->GetItemCount(ClientID, KWAHGANDON) < QUEST5 || Server()->GetItemCount(ClientID, PIGPORNO) < QUEST3)
-							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);	
+							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);
 						else
 						{
 							m_apPlayers[ClientID]->MoneyAdd(1000000);
@@ -1592,7 +1592,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					else if(m_apPlayers[ClientID]->AccData.Quest == 6)
 					{
 						if(Server()->GetItemCount(ClientID, KWAHGANDON) < QUEST6 || Server()->GetItemCount(ClientID, FOOTKWAH) < QUEST6)
-							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);	
+							return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Quest not complected!"), NULL);
 						else
 						{
 							m_apPlayers[ClientID]->MoneyAdd(1050000);
@@ -1604,37 +1604,37 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 							UpdateStats(ClientID);
 						}
 					}
-					ResetVotes(ClientID, QUEST);	
-					
+					ResetVotes(ClientID, QUEST);
+
 					return;
-				}	
-				
+				}
+
 				// ПРОКАЧКА ФУНКЦИИ
-				
+
 				else if(str_comp(aCmd, "uhealth") == 0)
 				{
 					int Get = 1;
 					if (pReason[0] && isdigit(pReason[0]))
 						Get = atoi (pReason);
-						
-					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)				
+
+					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)
 						Get = m_apPlayers[ClientID]->AccUpgrade.Upgrade;
-					
+
 					if(Get < 1 || Get > 1000)
 						Get = 1;
-					
+
 					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade <= 0)
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.Health >= BMAXHEALTH) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.Health >= HMAXHEALTH) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.Health >= AMAXHEALTH))
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);
+
 					m_apPlayers[ClientID]->AccUpgrade.Health += Get;
 					m_apPlayers[ClientID]->AccUpgrade.Upgrade -= Get;
-					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);							
-					
+					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);
+
 					if(m_apPlayers[ClientID]->GetCharacter())
 					{
 						if(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER)
@@ -1644,19 +1644,19 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 						else if(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS)
 							m_apPlayers[ClientID]->m_HealthStart += Get*40;
 					}
-						
+
 					UpdateUpgrades(ClientID);
-					ResetVotes(ClientID, CLMENU);	
+					ResetVotes(ClientID, CLMENU);
 					return;
-				}	
-				
+				}
+
 				else if(str_comp(aCmd, "udamage") == 0)
 				{
 					int Get = 1;
 					if (pReason[0] && isdigit(pReason[0]))
 						Get = atoi (pReason);
-						
-					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)				
+
+					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)
 						Get = m_apPlayers[ClientID]->AccUpgrade.Upgrade;
 
 					int GetSize = 0;
@@ -1668,67 +1668,67 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					}
 					if(Get > GetSize)
 						Get = GetSize;
-					
+
 					if(Get < 1 || Get > 1000)
 						Get = 1;
-					
+
 					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade <= 0)
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.Damage >= BMAXDAMAGE) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.Damage >= HMAXDAMAGE) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.Damage >= AMAXDAMAGE))
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);	
-				
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);
+
 					m_apPlayers[ClientID]->AccUpgrade.Damage += Get;
 					m_apPlayers[ClientID]->AccUpgrade.Upgrade -= Get;
-					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);							
-					
+					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.Damage > BMAXDAMAGE-1)||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.Damage > HMAXDAMAGE-1)||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.Damage > AMAXDAMAGE-1))
 					{
-						SendMail(ClientID, "You got finnaly item!", SNAPDAMAGE, 1);	
+						SendMail(ClientID, "You got finnaly item!", SNAPDAMAGE, 1);
 					}
-					
+
 					UpdateUpgrades(ClientID);
-					ResetVotes(ClientID, CLMENU);	
-					
+					ResetVotes(ClientID, CLMENU);
+
 					return;
-				}	
-				
+				}
+
 				else if(str_comp(aCmd, "uammo") == 0)
 				{
 					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < 5)
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.Ammo >= BMAXAMMO) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.Ammo >= HMAXAMMO) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.Ammo >= AMAXAMMO))
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);	
-									
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);
+
 					m_apPlayers[ClientID]->AccUpgrade.Ammo++;
 					m_apPlayers[ClientID]->AccUpgrade.Upgrade -= 5;
-					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully"), NULL);							
-					
+					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully"), NULL);
+
 					int geta = (int)(5+m_apPlayers[ClientID]->AccUpgrade.Ammo);
 					Server()->SetMaxAmmo(ClientID, INFWEAPON_GUN, geta);
 					Server()->SetMaxAmmo(ClientID, INFWEAPON_SHOTGUN, geta);
 					Server()->SetMaxAmmo(ClientID, INFWEAPON_GRENADE, geta);
 					Server()->SetMaxAmmo(ClientID, INFWEAPON_RIFLE, geta);
-					
-					UpdateUpgrades(ClientID);	
-					ResetVotes(ClientID, CLMENU);	
-					
+
+					UpdateUpgrades(ClientID);
+					ResetVotes(ClientID, CLMENU);
+
 					return;
-				}	
+				}
 				else if(str_comp(aCmd, "uammoregen") == 0)
 				{
 					int Get = 1;
 					if (pReason[0] && isdigit(pReason[0]))
 						Get = atoi (pReason);
-						
-					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)				
+
+					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)
 						Get = m_apPlayers[ClientID]->AccUpgrade.Upgrade;
 
 					int GetSize = 0;
@@ -1745,40 +1745,40 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 						Get = 1;
 
 					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade <= 0)
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.AmmoRegen >= BMAXAREGEN) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.AmmoRegen >= HMAXAREGEN) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.AmmoRegen >= AMAXAREGEN))
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);	
-									
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);
+
 					m_apPlayers[ClientID]->AccUpgrade.AmmoRegen += Get;
 					m_apPlayers[ClientID]->AccUpgrade.Upgrade -= Get;
-					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);							
-					
+					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.AmmoRegen > BMAXAREGEN-1)||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.AmmoRegen > HMAXAREGEN-1)||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.AmmoRegen > AMAXAREGEN-1))
 					{
-						SendMail(ClientID, "You got finnaly item!", SNAPAMMOREGEN, 1);	
+						SendMail(ClientID, "You got finnaly item!", SNAPAMMOREGEN, 1);
 					}
-					
+
 					int getar = (int)(650-m_apPlayers[ClientID]->AccUpgrade.AmmoRegen*2);
 					Server()->SetAmmoRegenTime(ClientID, INFWEAPON_GRENADE, getar);
 					Server()->SetAmmoRegenTime(ClientID, INFWEAPON_SHOTGUN, getar);
 					Server()->SetAmmoRegenTime(ClientID, INFWEAPON_RIFLE, getar);
-					
+
 					UpdateUpgrades(ClientID);
-					ResetVotes(ClientID, CLMENU);	
+					ResetVotes(ClientID, CLMENU);
 					return;
-				}	
+				}
 				else if(str_comp(aCmd, "uhandle") == 0)
 				{
 					int Get = 1;
 					if (pReason[0] && isdigit(pReason[0]))
 						Get = atoi (pReason);
-										
-					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)				
+
+					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)
 						Get = m_apPlayers[ClientID]->AccUpgrade.Upgrade;
 
 					int GetSize = 0;
@@ -1795,88 +1795,88 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 						Get = 1;
 
 					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade <= 0)
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.Speed >= BMAXHANDLE) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.Speed >= HMAXHANDLE) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.Speed >= AMAXHANDLE))
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);
+
 					m_apPlayers[ClientID]->AccUpgrade.Speed += Get;
 					m_apPlayers[ClientID]->AccUpgrade.Upgrade -= Get;
-					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);							
-					
+					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.Speed > BMAXHANDLE-1)||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.Speed > HMAXHANDLE-1)||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.Speed > AMAXHANDLE-1))
 					{
 						SendMail(ClientID, "You got finnaly item!", SNAPHANDLE, 1);
 					}
-					
+
 					int getsp = (int)(1000+m_apPlayers[ClientID]->AccUpgrade.Speed*30);
 					int getspg = (int)(1000+m_apPlayers[ClientID]->AccUpgrade.Speed*12);
-					Server()->SetFireDelay(ClientID, INFWEAPON_HAMMER, getsp);	
+					Server()->SetFireDelay(ClientID, INFWEAPON_HAMMER, getsp);
 					Server()->SetFireDelay(ClientID, INFWEAPON_GUN, getsp);
 					Server()->SetFireDelay(ClientID, INFWEAPON_SHOTGUN, getsp);
 					Server()->SetFireDelay(ClientID, INFWEAPON_GRENADE, getspg);
 					Server()->SetFireDelay(ClientID, INFWEAPON_RIFLE, getsp);
-					
+
 					UpdateUpgrades(ClientID);
-					ResetVotes(ClientID, CLMENU);	
+					ResetVotes(ClientID, CLMENU);
 					return;
-				}	
+				}
 
 				else if(str_comp(aCmd, "umana") == 0)
 				{
 					int Get = 1;
 					if (pReason[0] && isdigit(pReason[0]))
 						Get = atoi (pReason);
-										
-					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)				
+
+					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)
 						Get = m_apPlayers[ClientID]->AccUpgrade.Upgrade;
 
 					if(Get < 1 || Get > 1000)
 						Get = 1;
 
 					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade <= 0)
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);
+
 					m_apPlayers[ClientID]->AccUpgrade.Mana += Get;
 					m_apPlayers[ClientID]->AccUpgrade.Upgrade -= Get;
-					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);							
-	
+					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);
+
 					UpdateUpgrades(ClientID);
-					ResetVotes(ClientID, CLMENU);	
+					ResetVotes(ClientID, CLMENU);
 					return;
-				}	
+				}
 
 				else if(str_comp(aCmd, "uspray") == 0)
 				{
 					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < 10)
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.Spray >= BMAXSPREED) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.Spray >= HMAXSPREED) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.Spray >= AMAXSPREED))
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);
+
 					m_apPlayers[ClientID]->AccUpgrade.Spray++;
 					m_apPlayers[ClientID]->AccUpgrade.Upgrade -= 10;
-					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully"), NULL);							
-					
+					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully"), NULL);
+
 					UpdateUpgrades(ClientID);
-					ResetVotes(ClientID, CLMENU);	
-					
+					ResetVotes(ClientID, CLMENU);
+
 					return;
-				}	
-				
+				}
+
 				else if(str_comp(aCmd, "uhpregen") == 0)
 				{
 					int Get = 1;
 					if (pReason[0] && isdigit(pReason[0]))
 						Get = atoi (pReason);
 
-					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)				
+					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade < Get)
 						Get = m_apPlayers[ClientID]->AccUpgrade.Upgrade;
 
 					int GetSize = 0;
@@ -1888,243 +1888,243 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					}
 					if(Get > GetSize)
 						Get = GetSize;
-					
+
 					if(Get < 1 || Get > 1000)
 						Get = 1;
-					
+
 					if(m_apPlayers[ClientID]->AccUpgrade.Upgrade <= 0)
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not upgrade count"), NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.HPRegen >= BMAXHPREGEN) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.HPRegen >= HMAXHPREGEN) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.HPRegen >= AMAXHPREGEN))
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);	
-							
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);
+
 					m_apPlayers[ClientID]->AccUpgrade.HPRegen += Get;
 					m_apPlayers[ClientID]->AccUpgrade.Upgrade -= Get;
-					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);							
-					
-					UpdateUpgrades(ClientID);	
-					ResetVotes(ClientID, CLMENU);	
+					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You upgrade successfully {int:lv} level's"), "lv", &Get, NULL);
+
+					UpdateUpgrades(ClientID);
+					ResetVotes(ClientID, CLMENU);
 					return;
-				}	
-				
+				}
+
 				else if(str_comp(aCmd, "ushammerrange") == 0)
 				{
 					if(m_apPlayers[ClientID]->AccUpgrade.SkillPoint < HAMMERRANGE)
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not skill count"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not skill count"), NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.HammerRange > 4) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.HammerRange > 5) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.HammerRange > 7))
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);	
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);
 
 					m_apPlayers[ClientID]->AccUpgrade.HammerRange++;
 					m_apPlayers[ClientID]->AccUpgrade.SkillPoint -= HAMMERRANGE;
-					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You skill pasive successfully"), NULL);							
-						
+					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You skill pasive successfully"), NULL);
+
 					UpdateUpgrades(ClientID);
-					ResetVotes(ClientID, CLMENU);	
+					ResetVotes(ClientID, CLMENU);
 					return;
-				}	
-				
+				}
+
 				else if(str_comp(aCmd, "upasive2") == 0)
 				{
 					if(m_apPlayers[ClientID]->AccUpgrade.SkillPoint < HAMMERRANGE)
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not skill count"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not skill count"), NULL);
+
 					if((m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK && m_apPlayers[ClientID]->AccUpgrade.Pasive2 > 4) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER && m_apPlayers[ClientID]->AccUpgrade.Pasive2 > 10) ||
 						(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS && m_apPlayers[ClientID]->AccUpgrade.Pasive2 > 7))
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);	
-					
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);
+
 					m_apPlayers[ClientID]->AccUpgrade.Pasive2++;
 					m_apPlayers[ClientID]->AccUpgrade.SkillPoint -= HAMMERRANGE;
-					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You skill pasive successfully"), NULL);							
-						
+					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You skill pasive successfully"), NULL);
+
 					UpdateUpgrades(ClientID);
-						
-					ResetVotes(ClientID, CLMENU);	
-					   
+
+					ResetVotes(ClientID, CLMENU);
+
 					return;
-				}	
+				}
 
 				else if(str_comp(aCmd, "uskillwall") == 0)
 				{
-					BuySkill(ClientID, 70, SKWALL); 
+					BuySkill(ClientID, 70, SKWALL);
 					return;
-				}	
+				}
 
 				else if(str_comp(aCmd, "uskillsword") == 0)
 				{
 					BuySkill(ClientID, 20, SSWORD);
 					return;
-				}	
+				}
 
 				else if(str_comp(aCmd, "uskillheal") == 0)
 				{
 					BuySkill(ClientID, 60, SKHEAL);
 					return;
-				}	
-				
+				}
+
 				// МАГАЗИН ФУНКЦИИ
 				else if(str_comp(aCmd, "bvip") == 0)
 				{
 					Server()->SetItemPrice(ClientID, VIPPACKAGE, 0, 1000);
 					BuyItem(VIPPACKAGE, ClientID, 1);
 					return;
-				}	
+				}
 				else if(str_comp(aCmd, "bsp") == 0)
 				{
 					Server()->SetItemPrice(ClientID, SKILLUPBOX, 0, 200);
 					BuyItem(SKILLUPBOX, ClientID, 1);
 					return;
-				}	
+				}
 				else if(str_comp(aCmd, "bantipvp") == 0)
 				{
 					Server()->SetItemPrice(ClientID, SANTIPVP, 0, 200);
 					BuyItem(SANTIPVP, ClientID, 1);
 					return;
 				}
-				
+
 				// НАСТРОЙКИ ФУНКЦИИ
 				else if(str_comp(aCmd, "ssantiping") == 0)
 				{
 					if(Server()->GetClientAntiPing(ClientID))
 						Server()->SetClientAntiPing(ClientID, 0);
-					else 
+					else
 						Server()->SetClientAntiPing(ClientID, 1);
-						
-					ResetVotes(ClientID, SETTINGS);	
+
+					ResetVotes(ClientID, SETTINGS);
 					return;
-				}	
+				}
 				else if(str_comp(aCmd, "ssseccurity") == 0)
 				{
 					if(Server()->GetSeccurity(ClientID))
 						Server()->SetSeccurity(ClientID, 0);
-					else 
+					else
 						Server()->SetSeccurity(ClientID, 1);
-						
-					ResetVotes(ClientID, SETTINGS);	
+
+					ResetVotes(ClientID, SETTINGS);
 					return;
-				}	
-					
+				}
+
 				else if(str_comp(aCmd, "sssetingschat") == 0)
 				{
 					int Get = Server()->GetItemSettings(ClientID, SCHAT)+1;
 					if(Get > 2) Server()->SetItemSettingsCount(ClientID, SCHAT, 0);
 					else Server()->SetItemSettingsCount(ClientID, SCHAT, Get);
-						
+
 					UpdateStats(ClientID);
-					ResetVotes(ClientID, SETTINGS);	
+					ResetVotes(ClientID, SETTINGS);
 					return;
-				}	
+				}
 				else if(str_comp(aCmd, "sskillwall") == 0)
 				{
 					int Get = Server()->GetItemSettings(ClientID, SKWALL)+1;
 					if(Get > 7) Server()->SetItemSettingsCount(ClientID, SKWALL, 0);
 					else Server()->SetItemSettingsCount(ClientID, SKWALL, Get);
-						
+
 					UpdateStats(ClientID);
-					ResetVotes(ClientID, CLMENU);	
+					ResetVotes(ClientID, CLMENU);
 					return;
-				}	
+				}
 				else if(str_comp(aCmd, "sskillheal") == 0)
 				{
 					int Get = Server()->GetItemSettings(ClientID, SKHEAL)+1;
 					if(Get > 7) Server()->SetItemSettingsCount(ClientID, SKHEAL, 0);
 					else Server()->SetItemSettingsCount(ClientID, SKHEAL, Get);
-						
+
 					UpdateStats(ClientID);
-					ResetVotes(ClientID, CLMENU);	
+					ResetVotes(ClientID, CLMENU);
 					return;
-				}	
+				}
 				else if(str_comp(aCmd, "sskillsword") == 0)
 				{
 					int Get = Server()->GetItemSettings(ClientID, SSWORD)+1;
 					if(Get > 7) Server()->SetItemSettingsCount(ClientID, SSWORD, 0);
 					else Server()->SetItemSettingsCount(ClientID, SSWORD, Get);
-						
+
 					UpdateStats(ClientID);
-					ResetVotes(ClientID, CLMENU);	
+					ResetVotes(ClientID, CLMENU);
 					return;
-				}	
+				}
 				else if(str_comp(aCmd, "sskillsummer") == 0)
 				{
 					int Get = Server()->GetItemSettings(ClientID, SHEALSUMMER)+1;
 					if(Get > 7) Server()->SetItemSettingsCount(ClientID, SHEALSUMMER, 0);
 					else Server()->SetItemSettingsCount(ClientID, SHEALSUMMER, Get);
-						
+
 					UpdateStats(ClientID);
-					ResetVotes(ClientID, CLMENU);	
+					ResetVotes(ClientID, CLMENU);
 					return;
-				}	
+				}
 				else if(str_comp(aCmd, "ssantipvp") == 0)
 				{
 					Server()->SetItemSettings(ClientID, SANTIPVP);
-					ResetVotes(ClientID, SETTINGS);	
+					ResetVotes(ClientID, SETTINGS);
 					return;
-				}		
+				}
 				else if(str_comp(aCmd, "sssetingsdrop") == 0)
 				{
 					Server()->SetItemSettings(ClientID, SDROP);
-						
-					UpdateStats(ClientID);
-					ResetVotes(ClientID, SETTINGS);	
-					return;
-				}		
 
-				// ИНВЕНТАРЬ ФУНКЦИИ 
+					UpdateStats(ClientID);
+					ResetVotes(ClientID, SETTINGS);
+					return;
+				}
+
+				// ИНВЕНТАРЬ ФУНКЦИИ
 				else if(str_comp(aCmd, "useitem") == 0)
-				{	
+				{
 					if(m_apPlayers[ClientID]->m_LastChangeInfo && m_apPlayers[ClientID]->m_LastChangeInfo+Server()->TickSpeed()*3 > Server()->Tick())
 						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Please wait..."), NULL);
 
 					m_apPlayers[ClientID]->m_LastChangeInfo = Server()->Tick();
 					int SelectItem = m_apPlayers[ClientID]->m_SelectItem;
-					
+
 					int Get = chartoint(pReason, 100000);
 					if(SelectItem == RANDOMCRAFTITEM || SelectItem == EVENTBOX || SelectItem == FARMBOX ||
 						SelectItem == RESETINGUPGRADE || SelectItem == RESETINGSKILL || SelectItem == VIPPACKAGE)
 						Get = 1;
-					
+
 					Server()->RemItem(ClientID, SelectItem, Get, USEDUSE);
 					m_apPlayers[ClientID]->m_SelectItem = -1;
 					ResetVotes(ClientID, AUTH);
 					return;
-				}	
-				
+				}
+
 				else if(str_comp(aCmd, "sellitem") == 0)
-				{	
+				{
 					int SelectItem = m_apPlayers[ClientID]->m_SelectItem;
 
 					Server()->RemItem(ClientID, SelectItem, chartoint(pReason, 1000), USEDSELL);
 					m_apPlayers[ClientID]->m_SelectItem = -1;
 					return;
-				}	
-				
+				}
+
 				else if(str_comp(aCmd, "dropitem") == 0)
 				{
 					if(m_apPlayers[ClientID]->m_LastChangeInfo && m_apPlayers[ClientID]->m_LastChangeInfo+Server()->TickSpeed()*3 > Server()->Tick())
 						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Please wait..."), NULL);
 
 					m_apPlayers[ClientID]->m_LastChangeInfo = Server()->Tick();
-					int SelectItem = m_apPlayers[ClientID]->m_SelectItem;					
+					int SelectItem = m_apPlayers[ClientID]->m_SelectItem;
 					Server()->RemItem(ClientID, SelectItem, chartoint(pReason, 10000), USEDDROP); // Выброс предметов для всех игроков
 					m_apPlayers[ClientID]->m_SelectItem = -1;
 					ResetVotes(ClientID, AUTH);
 					return;
-				}	
-				
+				}
+
 				else if(str_comp(aCmd, "enchantitem") == 0)
 				{
 					if(m_apPlayers[ClientID]->m_LastChangeInfo && m_apPlayers[ClientID]->m_LastChangeInfo+Server()->TickSpeed()*3 > Server()->Tick())
 						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Please wait..."), NULL);
 
 					m_apPlayers[ClientID]->m_LastChangeInfo = Server()->Tick();
-					int SelectItem = m_apPlayers[ClientID]->m_SelectItem;					
+					int SelectItem = m_apPlayers[ClientID]->m_SelectItem;
 					if(Server()->GetItemCount(ClientID, MATERIAL) < 1000)
-						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Need 1000 material"), NULL); 	
+						return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Need 1000 material"), NULL);
 
 					Server()->RemItem(ClientID, MATERIAL, 1000, -1);
 					if(rand()%(1+(Server()->GetItemEnchant(ClientID, SelectItem))) == 0)
@@ -2132,20 +2132,20 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 						Server()->SetItemEnchant(ClientID, SelectItem, Server()->GetItemEnchant(ClientID, SelectItem)+1);
 
 						int Enchant = Server()->GetItemEnchant(ClientID, SelectItem);
-						SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} succesful enchant {str:item} +{int:enchant}"), 
-							"name", Server()->ClientName(ClientID), "item", Server()->GetItemName(ClientID, SelectItem), "enchant", &Enchant, NULL); 
-					
+						SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} succesful enchant {str:item} +{int:enchant}"),
+							"name", Server()->ClientName(ClientID), "item", Server()->GetItemName(ClientID, SelectItem), "enchant", &Enchant, NULL);
+
 						if(Enchant == 10 && !Server()->GetItemCount(ClientID, TITLEENCHANT))
 						{
 							SendMail(ClientID, "Hello, you unlock new title!", TITLEENCHANT, 1);
 						}
 					}
-					else SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Upgrading not Succesful."), NULL); 
-				
+					else SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Upgrading not Succesful."), NULL);
+
 					m_apPlayers[ClientID]->m_SelectItem = -1;
 					ResetVotes(ClientID, ARMORMENU);
 					return;
-				}	
+				}
 
 				else if(str_comp(aCmd, "destitem") == 0)
 				{
@@ -2155,10 +2155,10 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					m_apPlayers[ClientID]->m_LastChangeInfo = Server()->Tick();
 					int SelectItem = m_apPlayers[ClientID]->m_SelectItem;
 					int Get = chartoint(pReason, 1000000);
-					
-					if(Server()->GetItemCount(ClientID, SelectItem) < Get)	
+
+					if(Server()->GetItemCount(ClientID, SelectItem) < Get)
 						Get = Server()->GetItemCount(ClientID, SelectItem);
-					
+
 					if(!Server()->GetItemCount(ClientID, SelectItem))
 					{
 						if(m_apPlayers[ClientID]->GetCharacter())
@@ -2178,7 +2178,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					m_apPlayers[ClientID]->m_SelectItem = -1;
 					ResetVotes(ClientID, AUTH);
 					return;
-				}	
+				}
 
 				for(int i = 0; i < 20; i++)
 				{
@@ -2192,7 +2192,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 						Server()->SetRewardMail(ClientID, i, -1, -1);
 						if(ItemID != -1 && ItemNum != -1)
 							GiveItem(ClientID, ItemID, ItemNum);
-					
+
 						ResetVotes(ClientID, MAILMENU);
 					}
 				}
@@ -2204,9 +2204,9 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					if(str_comp(aCmd, aBuf) == 0)
 					{
 						ResetVotes(ClientID, i);
-						return;	
-					}						
-				}	
+						return;
+					}
+				}
 
 				for(int i = 1; i < 7; ++i)
 				{
@@ -2216,9 +2216,9 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					{
 						m_apPlayers[ClientID]->m_SelectItemType = i;
 						ResetVotes(ClientID, INVENTORY);
-						return;	
-					}						
-				}			
+						return;
+					}
+				}
 				for(int i = 1; i < 7; ++i)
 				{
 					char aBuf[16];
@@ -2227,8 +2227,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					{
 						m_apPlayers[ClientID]->m_SortedSelectCraft = i;
 						ResetVotes(ClientID, CRAFTING);
-						return;	
-					}						
+						return;
+					}
 				}
 
 				for(int i = 1; i < 4; i++)
@@ -2239,8 +2239,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					{
 						m_apPlayers[ClientID]->m_SelectArmor = i;
 						ResetVotes(ClientID, ARMORMENU);
-						return;	
-					}						
+						return;
+					}
 				}
 
 				for(int i = 1; i < 9; ++i)
@@ -2251,8 +2251,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					{
 						m_apPlayers[ClientID]->m_SortedSelectTop = i;
 						ResetVotes(ClientID, TOPMENU);
-						return;	
-					}						
+						return;
+					}
 				}
 
 				// Все функции с предметами
@@ -2263,13 +2263,13 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					str_format(aBuf, sizeof(aBuf), "set%d", i);
 					if(str_comp(aCmd, aBuf) == 0)
 					{
-						Server()->SetItemSettings(ClientID, i, Server()->GetItemType(ClientID, i));	
-						ResetVotes(ClientID, m_apPlayers[ClientID]->m_UpdateMenu);	
+						Server()->SetItemSettings(ClientID, i, Server()->GetItemType(ClientID, i));
+						ResetVotes(ClientID, m_apPlayers[ClientID]->m_UpdateMenu);
 
 						m_pController->OnPlayerInfoChange(m_apPlayers[ClientID]);
 
 						if(i == PIZDAMET)
-						{	
+						{
 							if(Server()->GetItemSettings(ClientID, PIZDAMET))
 								Server()->SetFireDelay(ClientID, INFWEAPON_GRENADE, 7000);
 							else
@@ -2277,62 +2277,62 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 						}
 
 						if(i == LAMPHAMMER)
-						{	
+						{
 							if(Server()->GetItemSettings(ClientID, LAMPHAMMER))
 								Server()->SetFireDelay(ClientID, INFWEAPON_HAMMER, 1200);
 							else
 								Server()->SetFireDelay(ClientID, INFWEAPON_HAMMER, int(1000+m_apPlayers[ClientID]->AccUpgrade.Speed*12));
 						}
-						return;	
-					}	
+						return;
+					}
 
 					str_format(aBuf, sizeof(aBuf), "bon%d", i);
 					if(str_comp(aCmd, aBuf) == 0)
 					{
 						BuyItem(i, ClientID);
-						return;	
-					}	
+						return;
+					}
 
 					str_format(aBuf, sizeof(aBuf), "seli%d", i);
 					if(str_comp(aCmd, aBuf) == 0)
 					{
 						Server()->RemItem(ClientID, i, chartoint(pReason, 1000), USEDSELL);
-						return;	
-					}	
+						return;
+					}
 
 					str_format(aBuf, sizeof(aBuf), "it%d", i);
 					if(str_comp(aCmd, aBuf) == 0)
 					{
 						m_apPlayers[ClientID]->m_SelectItem = i;
 						ResetVotes(ClientID, SELITEM);
-						return;	
-					}	
+						return;
+					}
 
 					str_format(aBuf, sizeof(aBuf), "cra%d", i);
 					if(str_comp(aCmd, aBuf) == 0)
 					{
 						CreateItem(ClientID, i, 1);
-						return;	
-					}	
-				}	
-				
+						return;
+					}
+				}
+
 				for(int i = 0; i < 64; ++i)
 				{
 					char aBuf[16];
 					str_format(aBuf, sizeof(aBuf), "cs%d", i);
-					
+
 					if(str_comp(aCmd, aBuf) == 0)
 					{
 						str_copy(m_apPlayers[ClientID]->m_SelectPlayer, Server()->GetSelectName(ClientID, i), sizeof(m_apPlayers[ClientID]->m_SelectPlayer));
 						ResetVotes(ClientID, CSETTING);
 						return;
-					}	
-				}	
+					}
+				}
 			}
 		}
 		else if(MsgID == NETMSGTYPE_CL_VOTE)
-		{	
-			CNetMsg_Cl_Vote *pMsg = (CNetMsg_Cl_Vote *)pRawMsg;		
+		{
+			CNetMsg_Cl_Vote *pMsg = (CNetMsg_Cl_Vote *)pRawMsg;
 			if(m_InviteTick[ClientID] > 0)
 			{
 				if(!pMsg->m_Vote)
@@ -2343,7 +2343,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					if(pMsg->m_Vote > 0)
 					{
 						if(m_apPlayers[ClientID])
-						{	
+						{
 							EnterClan(ClientID, m_apPlayers[ClientID]->m_InviteClanID);
 							ResetVotes(ClientID, AUTH);
 							SendBroadcast_Localization(ClientID, BROADCAST_PRIORITY_INTERFACE, 150, _("Welcome in clan"), NULL);
@@ -2385,7 +2385,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 			CPlayer *pPlayer = m_apPlayers[ClientID];
 			if(g_Config.m_SvCityStart == 1 && pPlayer->AccData.Level < 250)
-			{ 
+			{
 				SendBroadcast_Localization(ClientID, BROADCAST_PRIORITY_GAMEANNOUNCE, BROADCAST_DURATION_GAMEANNOUNCE, _("You need 100 level"), NULL);
 				return;
 			}
@@ -2394,10 +2394,10 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				pPlayer->SetClassSkin(m_apPlayers[ClientID]->GetClass());
 
 			Server()->InitClanID(Server()->GetClanID(ClientID), PLUS, "Init", 0, false);
-			Server()->ListInventory(ClientID, -1, true);	
+			Server()->ListInventory(ClientID, -1, true);
 			pPlayer->SetTeam(1, false);
 			ResetVotes(ClientID, AUTH);
-			pPlayer->SetMoveChar();	
+			pPlayer->SetMoveChar();
 		}
 		else if (MsgID == NETMSGTYPE_CL_SETSPECTATORMODE && !m_World.m_Paused)
 		{
@@ -2462,7 +2462,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 			str_copy(pPlayer->m_TeeInfos.m_SkinName, pMsg->m_pSkin, sizeof(pPlayer->m_TeeInfos.m_SkinName));
 			pPlayer->m_TeeInfos.m_UseCustomColor = true;
-			m_pController->OnPlayerInfoChange(pPlayer);	
+			m_pController->OnPlayerInfoChange(pPlayer);
 			SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You can change the language using the command /lang."), NULL);
 
 			// send tuning parameters to client
@@ -2481,25 +2481,25 @@ void CGameContext::BuyItem(int ItemType, int ClientID, int Type)
 	if(!m_apPlayers[ClientID] || !m_apPlayers[ClientID]->GetCharacter()
 		|| (m_apPlayers[ClientID]->m_LastChangeInfo && m_apPlayers[ClientID]->m_LastChangeInfo+Server()->TickSpeed() > Server()->Tick()))
 		return;
-	
+
 	m_apPlayers[ClientID]->m_LastChangeInfo = Server()->Tick();
 	if(Server()->GetItemCount(ClientID, ItemType) && ItemType != CLANTICKET && ItemType != BOOKEXPMIN)
-		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You already in inventory"), NULL);	
-	
+		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You already in inventory"), NULL);
+
 	if(m_apPlayers[ClientID]->AccData.Level < Server()->GetItemPrice(ClientID, ItemType, 0))
-		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not min level"), NULL);	
-		
+		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not min level"), NULL);
+
 	if(Type == 0 && m_apPlayers[ClientID]->AccData.Gold < Server()->GetItemPrice(ClientID, ItemType, 1))
-		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You do not have that much gold"), NULL);	
+		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You do not have that much gold"), NULL);
 
 	if(Type == 1 && m_apPlayers[ClientID]->AccData.Donate < Server()->GetItemPrice(ClientID, ItemType, 1))
-		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You do not have that much donate money"), NULL);	
+		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You do not have that much donate money"), NULL);
 
 	if(Type == 0)
 	{
 		int NeedMaterial = Server()->GetItemPrice(ClientID, ItemType, 1);
 		if(Server()->GetMaterials(0) < NeedMaterial)
-			return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("In shop not materials."), NULL);	
+			return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("In shop not materials."), NULL);
 
 		Server()->SetMaterials(0, Server()->GetMaterials(0)-NeedMaterial);
 	}
@@ -2507,17 +2507,17 @@ void CGameContext::BuyItem(int ItemType, int ClientID, int Type)
 	if(Type == 0) m_apPlayers[ClientID]->AccData.Gold -= Server()->GetItemPrice(ClientID, ItemType, 1);
 	else if(Type == 1) m_apPlayers[ClientID]->AccData.Donate -= Server()->GetItemPrice(ClientID, ItemType, 1);
 	GiveItem(ClientID, ItemType, 1);
-	SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You bought successfully"), NULL);							
-	
+	SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You bought successfully"), NULL);
+
 	if(ItemType == IGUN) m_apPlayers[ClientID]->GetCharacter()->GiveWeapon(WEAPON_GUN, 5);
 	if(ItemType == ISHOTGUN) m_apPlayers[ClientID]->GetCharacter()->GiveWeapon(WEAPON_SHOTGUN, 5);
 	if(ItemType == IGRENADE) m_apPlayers[ClientID]->GetCharacter()->GiveWeapon(WEAPON_GRENADE, 5);
 	if(ItemType == ILASER) m_apPlayers[ClientID]->GetCharacter()->GiveWeapon(WEAPON_RIFLE, 5);
-	
+
 	dbg_msg("buy/shop", "%s buy item %s:%d", Server()->ClientName(ClientID), Server()->GetItemName(ClientID, ItemType, false), ItemType);
 	m_apPlayers[ClientID]->m_LoginSync = 10;
 	UpdateStats(ClientID);
-	return;	
+	return;
 
 }
 
@@ -2525,18 +2525,18 @@ void CGameContext::BuyUpgradeClan(int ClientID, int Money, int Type, const char*
 {
 	if(!m_apPlayers[ClientID] || !m_apPlayers[ClientID]->GetCharacter())
 		return;
-	
-	if(Server()->GetLeader(ClientID, Server()->GetClanID(ClientID)) 
+
+	if(Server()->GetLeader(ClientID, Server()->GetClanID(ClientID))
 		&& Server()->GetClan(DMONEY, Server()->GetClanID(ClientID)) >= Money)
 	{
 		Server()->InitClanID(Server()->GetClanID(ClientID), MINUS, "Money", Money, true);
 		Server()->InitClanID(Server()->GetClanID(ClientID), PLUS, SubType, 1, true);
-		SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You buy clan upgrade!"), NULL);							
-		
+		SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You buy clan upgrade!"), NULL);
+
 		ResetVotes(ClientID, AUTH);
 		return;
 	}
-	else SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not leader or not money"), NULL);								
+	else SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not leader or not money"), NULL);
 }
 
 bool CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData)
@@ -2553,7 +2553,7 @@ bool CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData)
 	}
 	else
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "No such tuning parameter");
-	
+
 	return true;
 }
 
@@ -2563,7 +2563,7 @@ bool CGameContext::ConTuneReset(IConsole::IResult *pResult, void *pUserData)
 	CTuningParams TuningParams;
 	*pSelf->Tuning() = TuningParams;
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "Tuning reset");
-	
+
 	return true;
 }
 
@@ -2578,7 +2578,7 @@ bool CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData)
 		str_format(aBuf, sizeof(aBuf), "%s %.2f", pSelf->Tuning()->m_apNames[i], v);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
 	}
-	
+
 	return true;
 }
 
@@ -2590,7 +2590,7 @@ bool CGameContext::ConPause(IConsole::IResult *pResult, void *pUserData)
 		return true;
 
 	pSelf->m_World.m_Paused ^= 1;
-	
+
 	return true;
 }
 
@@ -2598,15 +2598,15 @@ bool CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	pSelf->m_pController->StartRound();
-	
+
 	return true;
-} 
+}
 
 bool CGameContext::ConBroadcast(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	pSelf->SendBroadcast(-1, pResult->GetString(0), BROADCAST_PRIORITY_SERVERANNOUNCE, pSelf->Server()->TickSpeed()*3);
-	
+
 	return true;
 }
 
@@ -2614,7 +2614,7 @@ bool CGameContext::ConSay(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	pSelf->SendChat(-1, CGameContext::CHAT_ALL, pResult->GetString(0));
-	
+
 	return true;
 }
 
@@ -2639,31 +2639,31 @@ void CGameContext::CheckPureTuning()
 
 void CGameContext::GiveItem(int ClientID, int ItemID, int Count, int Enchant)
 {
-	if(ClientID > MAX_NOBOT || ClientID < 0 || !m_apPlayers[ClientID])
+	if(ClientID >= MAX_PLAYERS || ClientID < 0 || !m_apPlayers[ClientID])
 		return;
 
 	if((ItemID >= AMULETCLEEVER && ItemID <= APAIN) || (ItemID >= SNAPDAMAGE && ItemID <= FORMULAFORRING) || (ItemID >= RINGBOOMER && ItemID <= EARRINGSKWAH) || (ItemID >= BOOKMONEYMIN && ItemID <= RELRINGS)
-		|| (ItemID >=CLANBOXEXP && ItemID <= CUSTOMSKIN) || (ItemID >= WHITETICKET && ItemID <= RANDOMCRAFTITEM) 
+		|| (ItemID >=CLANBOXEXP && ItemID <= CUSTOMSKIN) || (ItemID >= WHITETICKET && ItemID <= RANDOMCRAFTITEM)
 		|| (ItemID >=GUNBOUNCE && ItemID <= LAMPHAMMER) || ItemID == JUMPIMPULS || ItemID == FARMBOX || ItemID == PIZDAMET) // rare iteems
 	{
-		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} got {str:items}x{int:counts}"), "name", Server()->ClientName(ClientID), "items", Server()->GetItemName(ClientID, ItemID, false), "counts", &Count, NULL);					
-		
+		SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} got {str:items}x{int:counts}"), "name", Server()->ClientName(ClientID), "items", Server()->GetItemName(ClientID, ItemID, false), "counts", &Count, NULL);
+
 		if(m_apPlayers[ClientID]->GetCharacter())
 			CreateLolText(m_apPlayers[ClientID]->GetCharacter(), false, vec2(0,-75), vec2 (0,-1), 50, Server()->GetItemName(ClientID, ItemID, false));
 	}
 	if(Server()->GetItemType(ClientID, ItemID) == 10)
 	{
 		if(ItemID == FARMLEVEL)
-			SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("[Profession] {str:items}"), "items", Server()->GetItemName(ClientID, ItemID), NULL);				
+			SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("[Profession] {str:items}"), "items", Server()->GetItemName(ClientID, ItemID), NULL);
 		else if(ItemID == MINEREXP)
-			SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("[Profession] {str:items}"), "items", Server()->GetItemName(ClientID, ItemID), NULL);				
+			SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("[Profession] {str:items}"), "items", Server()->GetItemName(ClientID, ItemID), NULL);
 		else if(ItemID == LOADEREXP)
-			SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("[Profession] {str:items}"), "items", Server()->GetItemName(ClientID, ItemID), NULL);				
+			SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("[Profession] {str:items}"), "items", Server()->GetItemName(ClientID, ItemID), NULL);
 		else
-			SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} got {str:items}"), "name", Server()->ClientName(ClientID), "items", Server()->GetItemName(ClientID, ItemID), NULL);				
+			SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} got {str:items}"), "name", Server()->ClientName(ClientID), "items", Server()->GetItemName(ClientID, ItemID), NULL);
 	}
-	else 
-		SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You got items {str:items}x{int:counts}"), "items", Server()->GetItemName(ClientID, ItemID), "counts", &Count, NULL);				
+	else
+		SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You got items {str:items}x{int:counts}"), "items", Server()->GetItemName(ClientID, ItemID), "counts", &Count, NULL);
 
 	int Settings = 0;
 	if(ItemID == COOPERPIX) Settings = 180*Count;
@@ -2678,7 +2678,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 {
 	if(!m_apPlayers[ClientID] || !m_apPlayers[ClientID]->GetCharacter())
 		return;
-	
+
 	if(m_apPlayers[ClientID]->m_LastChangeInfo && m_apPlayers[ClientID]->m_LastChangeInfo+Server()->TickSpeed()*3 > Server()->Tick())
 		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Please wait..."), NULL);
 
@@ -2693,11 +2693,11 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 				return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("For crafted need {str:need}"), "need", "Formula Ring's, Slime Dirt", NULL);
 
 			Server()->RemItem(ClientID, RARESLIMEDIRT, Count, -1);
-			Server()->RemItem(ClientID, FORMULAFORRING, Count, -1);	
+			Server()->RemItem(ClientID, FORMULAFORRING, Count, -1);
 		} break;
-		case MODULEEMOTE: 
-		{	
-			if(!Server()->GetItemCount(ClientID, AHAPPY) || !Server()->GetItemCount(ClientID, AEVIL) || 
+		case MODULEEMOTE:
+		{
+			if(!Server()->GetItemCount(ClientID, AHAPPY) || !Server()->GetItemCount(ClientID, AEVIL) ||
 				!Server()->GetItemCount(ClientID, ASUPRRISE) || !Server()->GetItemCount(ClientID, ABLINK) || !Server()->GetItemCount(ClientID, APAIN))
 				return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("For crafted need {str:need}"), "need", "Module (happy, evil, surprise, blink, pain)", NULL);
 
@@ -2708,9 +2708,9 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, APAIN, Count, -1);
 			Server()->RemItem(ClientID, APAIN, Count, -1);
 		} break;
-		case WEAPONPRESSED: 
+		case WEAPONPRESSED:
 		{
-			if(!Server()->GetItemCount(ClientID, IGUN) || !Server()->GetItemCount(ClientID, ISHOTGUN) || 
+			if(!Server()->GetItemCount(ClientID, IGUN) || !Server()->GetItemCount(ClientID, ISHOTGUN) ||
 				!Server()->GetItemCount(ClientID, IGRENADE) || !Server()->GetItemCount(ClientID, ILASER))
 				return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("For crafted need {str:need}"), "need", "Weapon's (gun, shotgun, grenade, laser)", NULL);
 
@@ -2719,15 +2719,15 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, IGRENADE, Count, -1);
 			Server()->RemItem(ClientID, ILASER, Count, -1);
 		} break;
-		case RINGBOOMER: 
+		case RINGBOOMER:
 		{
 			if(!Server()->GetItemCount(ClientID, FORMULAFORRING) || Server()->GetItemCount(ClientID, HEADBOOMER) < 100)
 				return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("For crafted need {str:need}"), "need", "Formula Ring's, Body Boomer x100", NULL);
 
 			Server()->RemItem(ClientID, HEADBOOMER, 100, -1);
-			Server()->RemItem(ClientID, FORMULAFORRING, Count, -1);	
+			Server()->RemItem(ClientID, FORMULAFORRING, Count, -1);
 		} break;
-		case MODULESHOTGUNSLIME: 
+		case MODULESHOTGUNSLIME:
 		{
 			if(!Server()->GetItemCount(ClientID, FORMULAWEAPON) || !Server()->GetItemCount(ClientID, RINGBOOMER))
 				return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("For crafted need {str:need}"), "need", "Formula Weapon's, Ring Boomer", NULL);
@@ -2735,7 +2735,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, FORMULAWEAPON, Count, -1);
 			Server()->RemItem(ClientID, RINGBOOMER, Count, -1);
 		} break;
-		case EARRINGSKWAH: 
+		case EARRINGSKWAH:
 		{
 			if(!Server()->GetItemCount(ClientID, FORMULAEARRINGS) || Server()->GetItemCount(ClientID, FOOTKWAH) < 100)
 				return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("For crafted need {str:need}"), "need", "Formula Earring's, Foot Kwah x100", NULL);
@@ -2743,21 +2743,21 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, FORMULAEARRINGS, Count, -1);
 			Server()->RemItem(ClientID, FOOTKWAH, 100, -1);
 		} break;
-		case ZOMIBEBIGEYE: 
+		case ZOMIBEBIGEYE:
 		{
 			if(Server()->GetItemCount(ClientID, ZOMBIEEYE) < 30)
 				return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("For crafted need {str:need}"), "need", "Zombie Eyex30", NULL);
 
 			Server()->RemItem(ClientID, ZOMBIEEYE, 30, -1);
 		} break;
-		case SKELETSSBONE: 
+		case SKELETSSBONE:
 		{
 			if(Server()->GetItemCount(ClientID, SKELETSBONE) < 30)
 				return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("For crafted need {str:need}"), "need", "Skelet Bonex30", NULL);
 
 			Server()->RemItem(ClientID, SKELETSBONE, 30, -1);
 		} break;
-		case CUSTOMSKIN: 
+		case CUSTOMSKIN:
 		{
 			if(Server()->GetItemCount(ClientID, SKELETSSBONE) < 30 || Server()->GetItemCount(ClientID, ZOMIBEBIGEYE) < 30)
 				return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("For crafted need {str:need}"), "need", "Skelet Fortified Bonex30, Big Zombie Eyex30", NULL);
@@ -2765,7 +2765,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, SKELETSSBONE, 30, -1);
 			Server()->RemItem(ClientID, ZOMIBEBIGEYE, 30, -1);
 		} break;
-		case ENDEXPLOSION: 
+		case ENDEXPLOSION:
 		{
 			if(!Server()->GetItemCount(ClientID, BIGCRAFT))
 				GiveItem(ClientID, BIGCRAFT, 1);
@@ -2778,7 +2778,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 
 			Server()->RemItem(ClientID, FORMULAWEAPON, 25, -1);
 		} break;
-		case SHEALSUMMER: 
+		case SHEALSUMMER:
 		{
 			if(Server()->GetItemCount(ClientID, ESUMMER) < 20)
 			{
@@ -2788,14 +2788,14 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, ESUMMER, 20, -1);
 			if(rand()%100 < 96)
 			{
-				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} crafted item not succeses {str:item}x{int:coun}"), "name", Server()->ClientName(ClientID), "item", Server()->GetItemName(ClientID, ItemID, false), "coun", &Count ,NULL);				
+				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} crafted item not succeses {str:item}x{int:coun}"), "name", Server()->ClientName(ClientID), "item", Server()->GetItemName(ClientID, ItemID, false), "coun", &Count ,NULL);
 				return;
 			}
 			if(!Server()->GetItemCount(ClientID, TITLESUMMER))
 				GiveItem(ClientID, TITLESUMMER, 1);
 
 		} break;
-		case JUMPIMPULS: 
+		case JUMPIMPULS:
 		{
 			if(Server()->GetItemCount(ClientID, TOMATE) < 60 || Server()->GetItemCount(ClientID, POTATO) < 60 || Server()->GetItemCount(ClientID, CARROT) < 60)
 			{
@@ -2807,7 +2807,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, CARROT, 30, -1);
 		} break;
 
-		case COOPERPIX: 
+		case COOPERPIX:
 		{
 			if(Server()->GetItemCount(ClientID, WOOD) < 30 || Server()->GetItemCount(ClientID, COOPERORE) < 60)
 			{
@@ -2817,7 +2817,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, WOOD, 30, -1);
 			Server()->RemItem(ClientID, COOPERORE, 60, -1);
 		} break;
-		case IRONPIX: 
+		case IRONPIX:
 		{
 			if(Server()->GetItemCount(ClientID, WOOD) < 40 || Server()->GetItemCount(ClientID, IRONORE) < 60)
 			{
@@ -2827,7 +2827,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, WOOD, 40, -1);
 			Server()->RemItem(ClientID, IRONORE, 60, -1);
 		} break;
-		case GOLDPIX: 
+		case GOLDPIX:
 		{
 			if(Server()->GetItemCount(ClientID, WOOD) < 50 || Server()->GetItemCount(ClientID, GOLDORE) < 80)
 			{
@@ -2837,7 +2837,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, WOOD, 50, -1);
 			Server()->RemItem(ClientID, GOLDORE, 80, -1);
 		} break;
-		case DIAMONDPIX: 
+		case DIAMONDPIX:
 		{
 			if(Server()->GetItemCount(ClientID, WOOD) < 50 || Server()->GetItemCount(ClientID, DIAMONDORE) < 100)
 			{
@@ -2847,7 +2847,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, WOOD, 50, -1);
 			Server()->RemItem(ClientID, DIAMONDORE, 100, -1);
 		} break;
-		case FORMULAEARRINGS: 
+		case FORMULAEARRINGS:
 		{
 			if(Server()->GetItemCount(ClientID, IRONORE) < 100 || Server()->GetItemCount(ClientID, COOPERORE) < 100)
 			{
@@ -2857,7 +2857,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, COOPERORE, 100, -1);
 			Server()->RemItem(ClientID, IRONORE, 100, -1);
 		} break;
-		case FORMULAFORRING: 
+		case FORMULAFORRING:
 		{
 			if(Server()->GetItemCount(ClientID, IRONORE) < 125 || Server()->GetItemCount(ClientID, COOPERORE) < 125)
 			{
@@ -2867,7 +2867,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, COOPERORE, 125, -1);
 			Server()->RemItem(ClientID, IRONORE, 125, -1);
 		} break;
-		case FORMULAWEAPON: 
+		case FORMULAWEAPON:
 		{
 			if(Server()->GetItemCount(ClientID, IRONORE) < 150 || Server()->GetItemCount(ClientID, COOPERORE) < 150)
 			{
@@ -2877,7 +2877,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, COOPERORE, 150, -1);
 			Server()->RemItem(ClientID, IRONORE, 150, -1);
 		} break;
-		case LEATHERBODY: 
+		case LEATHERBODY:
 		{
 			if(Server()->GetItemCount(ClientID, LEATHER) < 50 || Server()->GetItemCount(ClientID, WOOD) < 150)
 			{
@@ -2887,7 +2887,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, LEATHER, 50, -1);
 			Server()->RemItem(ClientID, WOOD, 150, -1);
 		} break;
-		case LEATHERFEET: 
+		case LEATHERFEET:
 		{
 			if(Server()->GetItemCount(ClientID, LEATHER) < 40 || Server()->GetItemCount(ClientID, WOOD) < 120)
 			{
@@ -2897,7 +2897,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, LEATHER, 40, -1);
 			Server()->RemItem(ClientID, WOOD, 120, -1);
 		} break;
-		case COOPERBODY: 
+		case COOPERBODY:
 		{
 			if(Server()->GetItemCount(ClientID, COOPERORE) < 500 || Server()->GetItemCount(ClientID, WOOD) < 150)
 			{
@@ -2907,7 +2907,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, COOPERORE, 500, -1);
 			Server()->RemItem(ClientID, WOOD, 150, -1);
 		} break;
-		case COOPERFEET: 
+		case COOPERFEET:
 		{
 			if(Server()->GetItemCount(ClientID, COOPERORE) < 400 || Server()->GetItemCount(ClientID, WOOD) < 120)
 			{
@@ -2917,7 +2917,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, COOPERORE, 400, -1);
 			Server()->RemItem(ClientID, WOOD, 120, -1);
 		} break;
-		case IRONBODY: 
+		case IRONBODY:
 		{
 			if(Server()->GetItemCount(ClientID, IRONORE) < 500 || Server()->GetItemCount(ClientID, WOOD) < 150)
 			{
@@ -2927,7 +2927,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, IRONORE, 500, -1);
 			Server()->RemItem(ClientID, WOOD, 150, -1);
 		} break;
-		case IRONFEET: 
+		case IRONFEET:
 		{
 			if(Server()->GetItemCount(ClientID, IRONORE) < 400 || Server()->GetItemCount(ClientID, WOOD) < 120)
 			{
@@ -2937,7 +2937,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, IRONORE, 400, -1);
 			Server()->RemItem(ClientID, WOOD, 120, -1);
 		} break;
-		case GOLDBODY: 
+		case GOLDBODY:
 		{
 			if(Server()->GetItemCount(ClientID, GOLDORE) < 500 || Server()->GetItemCount(ClientID, WOOD) < 150)
 			{
@@ -2947,7 +2947,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, GOLDORE, 500, -1);
 			Server()->RemItem(ClientID, WOOD, 150, -1);
 		} break;
-		case GOLDFEET: 
+		case GOLDFEET:
 		{
 			if(Server()->GetItemCount(ClientID, GOLDORE) < 400 || Server()->GetItemCount(ClientID, WOOD) < 120)
 			{
@@ -2957,7 +2957,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, GOLDORE, 400, -1);
 			Server()->RemItem(ClientID, WOOD, 120, -1);
 		} break;
-		case DIAMONDBODY: 
+		case DIAMONDBODY:
 		{
 			if(Server()->GetItemCount(ClientID, DIAMONDORE) < 500 || Server()->GetItemCount(ClientID, WOOD) < 150)
 			{
@@ -2967,7 +2967,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, DIAMONDORE, 500, -1);
 			Server()->RemItem(ClientID, WOOD, 150, -1);
 		} break;
-		case DIAMONDFEET: 
+		case DIAMONDFEET:
 		{
 			if(Server()->GetItemCount(ClientID, DIAMONDORE) < 400 || Server()->GetItemCount(ClientID, WOOD) < 120)
 			{
@@ -2977,7 +2977,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, DIAMONDORE, 400, -1);
 			Server()->RemItem(ClientID, WOOD, 120, -1);
 		} break;
-		case DRAGONBODY: 
+		case DRAGONBODY:
 		{
 			if(Server()->GetItemCount(ClientID, DRAGONORE) < 500 || Server()->GetItemCount(ClientID, WOOD) < 150)
 			{
@@ -2987,7 +2987,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, DRAGONORE, 500, -1);
 			Server()->RemItem(ClientID, WOOD, 150, -1);
 		} break;
-		case DRAGONFEET: 
+		case DRAGONFEET:
 		{
 			if(Server()->GetItemCount(ClientID, DRAGONORE) < 400 || Server()->GetItemCount(ClientID, WOOD) < 120)
 			{
@@ -2997,7 +2997,7 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, DRAGONORE, 400, -1);
 			Server()->RemItem(ClientID, WOOD, 120, -1);
 		} break;
-		case STCLASIC: 
+		case STCLASIC:
 		{
 			if(Server()->GetItemCount(ClientID, COOPERORE) < 100 || Server()->GetItemCount(ClientID, IRONORE) < 10)
 			{
@@ -3008,24 +3008,24 @@ void CGameContext::CreateItem(int ClientID, int ItemID, int Count)
 			Server()->RemItem(ClientID, IRONORE, 10, -1);
 		} break;
 	}
-	SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} crafted item {str:item}x{int:coun}"), "name", Server()->ClientName(ClientID), "item", Server()->GetItemName(ClientID, ItemID, false), "coun", &Count ,NULL);				
+	SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} crafted item {str:item}x{int:coun}"), "name", Server()->ClientName(ClientID), "item", Server()->GetItemName(ClientID, ItemID, false), "coun", &Count ,NULL);
 	SendMail(ClientID, "Hello, succesful craft item!", ItemID, Count);
 }
 
 void CGameContext::BuySkill(int ClientID, int Price, int ItemID)
 {
 	if(Server()->GetItemCount(ClientID, ItemID))
-		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);	 
+		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Bought this max level"), NULL);
 
 	if(m_apPlayers[ClientID]->AccUpgrade.SkillPoint < Price)
-		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not skill count"), NULL);	
+		return SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You not skill count"), NULL);
 
 	SendMail(ClientID, "You unlock new skill!", ItemID, 1);
 	m_apPlayers[ClientID]->AccUpgrade.SkillPoint -= Price;
-	SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You skill active successfully"), NULL);							
-		
+	SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You skill active successfully"), NULL);
+
 	UpdateUpgrades(ClientID);
-	ResetVotes(ClientID, AUTH);	
+	ResetVotes(ClientID, AUTH);
 	return;
 }
 
@@ -3034,7 +3034,7 @@ void CGameContext::SkillSettings(int ClientID, int ItemType, const char *Msg)
 {
 	if(Server()->GetItemCount(ClientID, ItemType))
 	{
-		const char *Data = "F4"; 
+		const char *Data = "F4";
 		switch(Server()->GetItemSettings(ClientID, ItemType))
 		{
 			case 1: Data = "F3"; break;
@@ -3050,21 +3050,21 @@ void CGameContext::SkillSettings(int ClientID, int ItemType, const char *Msg)
 }
 
 void CGameContext::ResetVotes(int ClientID, int Type)
-{	
+{
 	if(!m_apPlayers[ClientID])
 		return;
-	
+
 	if(m_apPlayers[ClientID]->IsBot())
 		return;
-		
+
 	ClearVotes(ClientID);
-			
+
 	if(m_PlayerVotes[ClientID].size())
 		return;
 
 	if(m_apPlayers[ClientID]->GetCharacter() && Type > AUTH)
 		CreateSound(m_apPlayers[ClientID]->GetCharacter()->m_Pos, 25);
-	
+
 	// ############################### Основное не авторизированных
 	if(Type == NOAUTH)
 	{
@@ -3076,7 +3076,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		AddVote_Localization(ClientID, "null", "All credits in 'Credits' information");
 		return;
 	}
-	
+
 	// ############################### Основное меню авторизированных
 	else if(Type == AUTH)
 	{
@@ -3100,9 +3100,9 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 
 		AddVote("······················· ", "null", ClientID);
 		AddVote_Localization(ClientID, "null", "♫ {str:psevdo}", "psevdo", LocalizeText(ClientID, "Sub Menu Personal"));
-		AddVoteMenu_Localization(ClientID, MAILMENU, MENUONLY, "☞ Mailbox ✉");	
-		AddVoteMenu_Localization(ClientID, ARMORMENU, MENUONLY, "☞ Armor ☭");	
-		AddVoteMenu_Localization(ClientID, INVENTORY, MENUONLY, "☞ Inventory & Items");		
+		AddVoteMenu_Localization(ClientID, MAILMENU, MENUONLY, "☞ Mailbox ✉");
+		AddVoteMenu_Localization(ClientID, ARMORMENU, MENUONLY, "☞ Armor ☭");
+		AddVoteMenu_Localization(ClientID, INVENTORY, MENUONLY, "☞ Inventory & Items");
 		AddVoteMenu_Localization(ClientID, CRAFTING, MENUONLY, "☞ Crafting item's");
 		AddVoteMenu_Localization(ClientID, QUEST, MENUONLY, "☞ Quest & Reward");
 
@@ -3122,8 +3122,8 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 			{
 				int Count = Server()->GetItemCount(ClientID, MATERIAL);
 				int Gold = Count/5;
-				SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Materials {int:count} : You got {int:money} gold"), 
-					"count", &Count, "money", &Gold, NULL);	
+				SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Materials {int:count} : You got {int:money} gold"),
+					"count", &Count, "money", &Gold, NULL);
 
 				Server()->SetMaterials(0, Server()->GetMaterials(0)+Count);
 				Server()->RemItem(ClientID, MATERIAL, Count, -1);
@@ -3131,10 +3131,10 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 			}
 
 			AddVote("", "null", ClientID);
-				
+
 			// ##################### ПРЕДМЕТЫ
 			AddVote_Localization(ClientID, "null", "✄  {str:psevdo}", "psevdo", LocalizeText(ClientID, "Items"));
-			
+
 			// WEAPON GUN
 			CreateNewShop(ClientID, IGUN, 3, 3, 40);
 			CreateNewShop(ClientID, IGRENADE, 3, 8, 70);
@@ -3142,10 +3142,10 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 			CreateNewShop(ClientID, ILASER, 3, 16, 310);
 			CreateNewShop(ClientID, HYBRIDSG, 3, 120, 40000);
 			AddVote("············", "null", ClientID);
-			
+
 			// #################### УЛУЧШЕНИЯ
 			AddVote_Localization(ClientID, "null", "★  {str:psevdo}", "psevdo", LocalizeText(ClientID, "Upgrades"));
-			
+
 			CreateNewShop(ClientID, HOOKDAMAGE, 3, 18, 100);
 			CreateNewShop(ClientID, GUNAUTO, 3, 20, 150);
 			CreateNewShop(ClientID, HAMMERAUTO, 3, 20, 1200);
@@ -3154,7 +3154,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 			CreateNewShop(ClientID, EXSHOTGUN, 3, 30, 10000);
 			CreateNewShop(ClientID, EXLASER, 3, 30, 1000);
 			CreateNewShop(ClientID, MODULEHOOKEXPLODE, 3, 40, 4000);
-			
+
 			CreateNewShop(ClientID, GHOSTGUN, 3, 60, 3000);
 			CreateNewShop(ClientID, GHOSTSHOTGUN, 3, 70, 15000);
 			CreateNewShop(ClientID, GHOSTGRENADE, 3, 70, 15000);
@@ -3162,16 +3162,16 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 
 			CreateNewShop(ClientID, GUNBOUNCE, 3, 90, 20000);
 			CreateNewShop(ClientID, GRENADEBOUNCE, 3, 90, 20000);
-		
+
 			CreateNewShop(ClientID, LAMPHAMMER, 3, 160, 50000);
 
 			// #################### СКИЛЫ
 			AddVote("············", "null", ClientID);
 			AddVote_Localization(ClientID, "null", "ღ  {str:psevdo}", "psevdo", LocalizeText(ClientID, "Skills"));
 			AddVote_Localization(ClientID, "null", "none item");
-			
+
 			// #################### ПЕРСОНАЛЬНО
-			
+
 			AddVote("············", "null", ClientID);
 			AddVote_Localization(ClientID, "null", "♫  {str:psevdo}", "psevdo", LocalizeText(ClientID, "Personal"));
 			CreateNewShop(ClientID, RESETINGUPGRADE, 3, 1, 30000);
@@ -3182,7 +3182,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 			CreateNewShop(ClientID, CLANTICKET, 2, 15, 2500);
 
 			// #################### РЕДКИЕ
-			
+
 			AddVote("············", "null", ClientID);
 			AddVote_Localization(ClientID, "null", "☀  {str:psevdo}", "psevdo", LocalizeText(ClientID, "Rare Items"));
 			CreateNewShop(ClientID, AMULETCLEEVER, 3, 1, 1200);
@@ -3204,7 +3204,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		}
 		return;
 	}
-	
+
 	else if(Type == JOBSSET)
 	{
 		m_apPlayers[ClientID]->m_LastVotelist = AUTH;
@@ -3215,7 +3215,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		int NeedExp = Level*g_Config.m_SvFarmExp;
 		int Exp = Server()->GetItemCount(ClientID, FARMLEVEL);
 		AddVote_Localization(ClientID, "null", "Profession Farming ({int:exp}/{int:nexp} Level: {int:lvl})", "exp", &Exp, "nexp", &NeedExp, "lvl", &Level);
-	
+
 		Level = 1+Server()->GetItemCount(ClientID, MINEREXP)/g_Config.m_SvMinerExp;
 		NeedExp = Level*g_Config.m_SvMinerExp;
 		Exp = Server()->GetItemCount(ClientID, MINEREXP);
@@ -3244,22 +3244,22 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 	}
 
 
-	else if(Type == ARMORMENU) 
+	else if(Type == ARMORMENU)
 	{
-		m_apPlayers[ClientID]->m_UpdateMenu = Type; 
+		m_apPlayers[ClientID]->m_UpdateMenu = Type;
 		m_apPlayers[ClientID]->m_LastVotelist = AUTH;
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
 		AddVote_Localization(ClientID, "null", "Your Armor Equipment");
 		AddVote("", "null", ClientID);
 		AddVote_Localization(ClientID, "null", "☄ {str:psevdo}", "psevdo", LocalizeText(ClientID, "Equipment"));
- 
+
 		int Bonus = Server()->GetBonusEnchant(ClientID, Server()->GetItemEnquip(ClientID, 15), 15);
 		AddVote_Localization(ClientID, "null", "◈ Body {str:enquip} / Health +{int:hp} Armor +{int:arm}", "enquip", Server()->GetItemName(ClientID, Server()->GetItemEnquip(ClientID, 15)), "hp", &Bonus, "arm", &Bonus);
 		Bonus = Server()->GetBonusEnchant(ClientID, Server()->GetItemEnquip(ClientID, 16), 16);
 		AddVote_Localization(ClientID, "null", "◈ Feet {str:enquip} / Health +{int:hp} Armor +{int:arm}", "enquip", Server()->GetItemName(ClientID, Server()->GetItemEnquip(ClientID, 16)), "hp", &Bonus, "arm", &Bonus);
 		Bonus = Server()->GetBonusEnchant(ClientID, Server()->GetItemEnquip(ClientID, 17), 17);
 		AddVote_Localization(ClientID, "null", "◈ Stabilized {str:enquip} / Damage +{int:dmg}", "enquip", Server()->GetItemName(ClientID, Server()->GetItemEnquip(ClientID, 17)), "dmg", &Bonus);
-	
+
 
 		AddVote("", "null", ClientID);
 		AddVote_Localization(ClientID, "null", "☄ {str:psevdo}", "psevdo", LocalizeText(ClientID, "Sorted & Select"));
@@ -3269,7 +3269,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 
 		AddBack(ClientID);
 		AddVote("", "null", ClientID);
-		
+
 		if(m_apPlayers[ClientID]->m_SelectArmor == 1)
 			Server()->ListInventory(ClientID, 15);
 		else if(m_apPlayers[ClientID]->m_SelectArmor == 2)
@@ -3299,7 +3299,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		AddBack(ClientID);
 		return;
 	}
-	
+
 	// ############################### Меню настроек
 	else if(Type == SETTINGS)
 	{
@@ -3367,7 +3367,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		AddBack(ClientID);
 		return;
 	}
-	
+
 	// ############################### Меню хилера
 	else if(Type == CLMENU)
 	{
@@ -3375,11 +3375,11 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		m_apPlayers[ClientID]->m_LastVotelist = AUTH;
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
 		AddVote_Localization(ClientID, "null", "This upgrading class");
-		AddVote_Localization(ClientID, "null", "Pasive skill and active");		
-		AddVote_Localization(ClientID, "null", "In reason count for upgrade");		
-		AddVote_Localization(ClientID, "null", "C - Class bonus.");		
-		AddVote_Localization(ClientID, "null", "SP - Need skill point.");	
-		AddVote_Localization(ClientID, "null", "UP - Need upgrade point.");	
+		AddVote_Localization(ClientID, "null", "Pasive skill and active");
+		AddVote_Localization(ClientID, "null", "In reason count for upgrade");
+		AddVote_Localization(ClientID, "null", "C - Class bonus.");
+		AddVote_Localization(ClientID, "null", "SP - Need skill point.");
+		AddVote_Localization(ClientID, "null", "UP - Need upgrade point.");
 		AddVote("", "null", ClientID);
 		AddVote_Localization(ClientID, "null", "Stats(Upgrade - {int:up} / SkillPoint - {int:sp})", "up", &m_apPlayers[ClientID]->AccUpgrade.Upgrade, "sp", &m_apPlayers[ClientID]->AccUpgrade.SkillPoint);
 		AddVote("············", "null", ClientID);
@@ -3394,42 +3394,42 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		AddVote_Localization(ClientID, "uspray", "☞ [{int:sum}] Spread +1(UP10 {str:bonus})", "sum", &m_apPlayers[ClientID]->AccUpgrade.Spray, "bonus", "C+0");
 		AddVote("············", "null", ClientID);
 		AddVote_Localization(ClientID, "null", "♞ {str:psevdo}", "psevdo", LocalizeText(ClientID, "Passive Skills"));
-		
+
 		int Need = HAMMERRANGE;
 		if(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_HEALER)
 		{
-			AddVote_Localization(ClientID, "ushammerrange", "☞ ({int:need}SP) Health +4% ({str:act}) ({int:sum})", "need", &Need, "act", 
-				m_apPlayers[ClientID]->AccUpgrade.HammerRange ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.HammerRange);		
-			AddVote_Localization(ClientID, "upasive2", "☞ ({int:need}SP) No get damage +2% ({str:act}) ({int:sum})", "need", &Need, "act", 
-				m_apPlayers[ClientID]->AccUpgrade.Pasive2 ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.Pasive2);			
+			AddVote_Localization(ClientID, "ushammerrange", "☞ ({int:need}SP) Health +4% ({str:act}) ({int:sum})", "need", &Need, "act",
+				m_apPlayers[ClientID]->AccUpgrade.HammerRange ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.HammerRange);
+			AddVote_Localization(ClientID, "upasive2", "☞ ({int:need}SP) No get damage +2% ({str:act}) ({int:sum})", "need", &Need, "act",
+				m_apPlayers[ClientID]->AccUpgrade.Pasive2 ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.Pasive2);
 		}
 		else if(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_ASSASINS)
 		{
-			AddVote_Localization(ClientID, "ushammerrange", "☞ ({int:need}SP) Crit +6.67% ({str:act}) ({int:sum})", "need", &Need, "act", 
-				m_apPlayers[ClientID]->AccUpgrade.HammerRange ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.HammerRange);		
-			AddVote_Localization(ClientID, "upasive2", "☞ ({int:need}SP) Crit Damage +3% ({str:act}) ({int:sum})", "need", &Need, "act", 
-				m_apPlayers[ClientID]->AccUpgrade.Pasive2 ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.Pasive2);			
+			AddVote_Localization(ClientID, "ushammerrange", "☞ ({int:need}SP) Crit +6.67% ({str:act}) ({int:sum})", "need", &Need, "act",
+				m_apPlayers[ClientID]->AccUpgrade.HammerRange ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.HammerRange);
+			AddVote_Localization(ClientID, "upasive2", "☞ ({int:need}SP) Crit Damage +3% ({str:act}) ({int:sum})", "need", &Need, "act",
+				m_apPlayers[ClientID]->AccUpgrade.Pasive2 ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.Pasive2);
 		}
 		else if(m_apPlayers[ClientID]->GetClass() == PLAYERCLASS_BERSERK)
 		{
-			AddVote_Localization(ClientID, "ushammerrange", "☞ ({int:need}SP) Hammer range ({str:act}) ({int:sum})", "need", &Need, "act", 
-				m_apPlayers[ClientID]->AccUpgrade.HammerRange ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.HammerRange);		
-			AddVote_Localization(ClientID, "upasive2", "☞ ({int:need}SP) Damage +3% ({str:act}) ({int:sum})", "need", &Need, "act", 
-				m_apPlayers[ClientID]->AccUpgrade.Pasive2 ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.Pasive2);			
+			AddVote_Localization(ClientID, "ushammerrange", "☞ ({int:need}SP) Hammer range ({str:act}) ({int:sum})", "need", &Need, "act",
+				m_apPlayers[ClientID]->AccUpgrade.HammerRange ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.HammerRange);
+			AddVote_Localization(ClientID, "upasive2", "☞ ({int:need}SP) Damage +3% ({str:act}) ({int:sum})", "need", &Need, "act",
+				m_apPlayers[ClientID]->AccUpgrade.Pasive2 ? "✔" : "x", "sum", &m_apPlayers[ClientID]->AccUpgrade.Pasive2);
 		}
 		AddVote("············", "null", ClientID);
 		AddVote_Localization(ClientID, "null", "☭ {str:psevdo}", "psevdo", LocalizeText(ClientID, "Active Skills"));
-		AddVote_Localization(ClientID, "uskillwall", "☞ (70SP) Skill Walls ({str:act})", "act", Server()->GetItemCount(ClientID, SKWALL) ? "30 Mana ✔" : "x");	
+		AddVote_Localization(ClientID, "uskillwall", "☞ (70SP) Skill Walls ({str:act})", "act", Server()->GetItemCount(ClientID, SKWALL) ? "30 Mana ✔" : "x");
 		SkillSettings(ClientID, SKWALL, "sskillwall");
-		AddVote_Localization(ClientID, "uskillheal", "☞ (60SP) Skill Heal ({str:act})", "act", Server()->GetItemCount(ClientID, SKHEAL) ? "50 Mana ✔" : "x");	
+		AddVote_Localization(ClientID, "uskillheal", "☞ (60SP) Skill Heal ({str:act})", "act", Server()->GetItemCount(ClientID, SKHEAL) ? "50 Mana ✔" : "x");
 		SkillSettings(ClientID, SKHEAL, "sskillheal");
-		AddVote_Localization(ClientID, "uskillsword", "☞ (20SP) Skill Sword ({str:act})", "act", Server()->GetItemCount(ClientID, SSWORD) ? "1 Mana ✔" : "x");	
+		AddVote_Localization(ClientID, "uskillsword", "☞ (20SP) Skill Sword ({str:act})", "act", Server()->GetItemCount(ClientID, SSWORD) ? "1 Mana ✔" : "x");
 		SkillSettings(ClientID, SSWORD, "sskillsword");
 		SkillSettings(ClientID, SHEALSUMMER, "sskillsummer");
 		AddBack(ClientID);
 		return;
 	}
-	 
+
 	// ############################### Клан основное меню
 	else if(Type == CLAN)
 	{
@@ -3465,14 +3465,14 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		AddBack(ClientID);
 		return;
 	}
-	
+
 	// ############################### Дом клана
 	else if(Type == CHOUSE)
-	{ 
-		m_apPlayers[ClientID]->m_LastVotelist = CLAN;	
+	{
+		m_apPlayers[ClientID]->m_LastVotelist = CLAN;
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
-		AddVote_Localization(ClientID, "null", "All clan in top got House");		
-		
+		AddVote_Localization(ClientID, "null", "All clan in top got House");
+
 		if(Server()->GetHouse(ClientID))
 		{
 			AddVote("", "null", ClientID);
@@ -3483,7 +3483,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 
 			int Count = 500000;
 			AddVote_Localization(ClientID, "uspawnhouse", "- Buy Spawning in House [{int:price}]", "price", &Count);
-		
+
 			int MaxCount = Server()->GetClan(DCHAIRHOUSE, Server()->GetClanID(ClientID));
 			Count = m_apPlayers[ClientID]->GetNeedForUpgClan(DCHAIRHOUSE)*2;
 			AddVote_Localization(ClientID, "uchair", "- Upgrade Chair Bonus [{int:max}*(+1) {int:coin}]", "maxcount", &MaxCount, "coin", &Count);
@@ -3502,7 +3502,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 	// ############################### Инвент лист
 	else if(Type == EVENTLIST)
 	{
-		m_apPlayers[ClientID]->m_LastVotelist = AUTH;	
+		m_apPlayers[ClientID]->m_LastVotelist = AUTH;
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
 		AddVote_Localization(ClientID, "null", "Event list");
 		AddVote("", "null", ClientID);
@@ -3512,7 +3512,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		{
 			found = true;
 			AddVote_Localization(ClientID, "null", "Event summer:");
-			AddVote_Localization(ClientID, "null", "When killing mobs rand get craft item");			
+			AddVote_Localization(ClientID, "null", "When killing mobs rand get craft item");
 			AddVote_Localization(ClientID, "null", "Random Crafted if succesful");
 			AddVote_Localization(ClientID, "null", "You got Title & Skill Summer");
 			AddVote("", "null", ClientID);
@@ -3542,7 +3542,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 	// ############################### Лист клана
 	else if(Type == CLANLIST)
 	{
-		m_apPlayers[ClientID]->m_LastVotelist = CLAN;	
+		m_apPlayers[ClientID]->m_LastVotelist = CLAN;
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
 		AddVote_Localization(ClientID, "null", "If you leader press player");
 		AddVote_Localization(ClientID, "null", "For open player settings");
@@ -3551,12 +3551,12 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		AddVote("", "null", ClientID);
 		return;
 	}
-	
+
 	// ############################### Выбор действия над игроком с клана
 	else if(Type == CSETTING)
 	{
-		m_apPlayers[ClientID]->m_LastVotelist = CLANLIST;	
-		
+		m_apPlayers[ClientID]->m_LastVotelist = CLANLIST;
+
 		AddVote_Localization(ClientID, "null", "▶ Selected player {str:name}", "name", m_apPlayers[ClientID]->m_SelectPlayer);
 		AddVote_Localization(ClientID, "cgetleader", "▹ Give away Leaders");
 		AddVote_Localization(ClientID, "ckickoff", "▹ Kick");
@@ -3564,63 +3564,63 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		AddBack(ClientID);
 		return;
 	}
-	
+
 	// ############################### Магазин клана
 	else if(Type == CSHOP)
 	{
-		m_apPlayers[ClientID]->m_LastVotelist = CLAN;	
-		
+		m_apPlayers[ClientID]->m_LastVotelist = CLAN;
+
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
 		AddVote_Localization(ClientID, "null", "Shop for clan members");
 		AddVote_Localization(ClientID, "null", "Buying only leader");
-		AddVote("", "null", ClientID); 
-		
+		AddVote("", "null", ClientID);
+
 		int Count = m_apPlayers[ClientID]->GetNeedForUpgClan(DMAXCOUNTUCLAN)*4;
 		int MaxCount = Server()->GetClan(DMAXCOUNTUCLAN, Server()->GetClanID(ClientID));
 		AddVote_Localization(ClientID, "null", "Core upgrade clan");
 		AddVote_Localization(ClientID, "uccount", "- Upgrade count max [{int:maxcount}(+1) {int:coin}]", "maxcount", &MaxCount, "coin", &Count);
-		
+
 		AddVote("", "null", ClientID);
 		AddVote_Localization(ClientID, "null", "Bonuses upgrade for clan member");
 		MaxCount = Server()->GetClan(DADDEXP, Server()->GetClanID(ClientID));
 		Count = m_apPlayers[ClientID]->GetNeedForUpgClan(DADDEXP);
 		AddVote_Localization(ClientID, "uaddexp", "- Upgrade Exp Bonus [{int:max}*(+1) {int:coin}]", "maxcount", &MaxCount, "coin", &Count);
-	
+
 		MaxCount = Server()->GetClan(DADDMONEY, Server()->GetClanID(ClientID));
 		Count = m_apPlayers[ClientID]->GetNeedForUpgClan(DADDMONEY);
-		AddVote_Localization(ClientID, "uaddmoney", "- Upgrade Silver Bonus [{int:max}*(+100) {int:coin}]", "maxcount", &MaxCount, "coin", &Count);						
+		AddVote_Localization(ClientID, "uaddmoney", "- Upgrade Silver Bonus [{int:max}*(+100) {int:coin}]", "maxcount", &MaxCount, "coin", &Count);
 		AddBack(ClientID);
 		return;
 	}
-	
+
 	// ############################### Добавка монет в клан
 	else if(Type == CMONEY)
 	{
-		m_apPlayers[ClientID]->m_LastVotelist = CLAN;	
+		m_apPlayers[ClientID]->m_LastVotelist = CLAN;
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
 		AddVote_Localization(ClientID, "null", "This menu for added");
 		AddVote_Localization(ClientID, "null", "Money for all members");
-		AddVote_Localization(ClientID, "null", "In reason, say the number");	
+		AddVote_Localization(ClientID, "null", "In reason, say the number");
 		AddVote("", "null", ClientID);
 		AddVote_Localization(ClientID, "cm1", "- Added in bank gold");
-		
+
 		AddBack(ClientID);
 		return;
 	}
-	
+
 	// ############################### Лист разыскиваемых
 	else if(Type == RESLIST)
 	{
-		m_apPlayers[ClientID]->m_LastVotelist = AUTH;	
-		
+		m_apPlayers[ClientID]->m_LastVotelist = AUTH;
+
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
 		AddVote_Localization(ClientID, "null", "This list wanted Nick and reward");
 		AddVote_Localization(ClientID, "null", "You need killing one this player");
 		AddVote_Localization(ClientID, "null", "You get reward, and player in jail");
 		AddVote("", "null", ClientID);
-		
+
 		bool Found = false;
-		for(int i = 0; i < MAX_NOBOT; ++i)
+		for(int i = 0; i < MAX_PLAYERS; ++i)
 		{
 			if(m_apPlayers[i])
 			{
@@ -3629,22 +3629,22 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 					char aBuf[64];
 					str_format(aBuf, sizeof(aBuf), "-%s (%d coin)", Server()->ClientName(i), m_apPlayers[i]->AccData.Level*1000);
 					AddVote(aBuf, "null", ClientID);
-					
+
 					Found = true;
 				}
 			}
 		}
 		if(!Found)
 			AddVote_Localization(ClientID, "null", "There are no searchable");
-		
+
 		AddBack(ClientID);
 		return;
 	}
-	
+
 	// ############################### Топ меню
 	else if(Type == TOPMENU)
 	{
-		m_apPlayers[ClientID]->m_LastVotelist = AUTH;	
+		m_apPlayers[ClientID]->m_LastVotelist = AUTH;
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
 		AddVote_Localization(ClientID, "null", "Top Players & Clans");
 		AddVote("", "null", ClientID);
@@ -3655,14 +3655,14 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		AddVote_Localization(ClientID, "sort6", "☞ Top by Killing");
 		AddVote_Localization(ClientID, "sort7", "☞ Top by Win Area");
 		AddVote("", "null", ClientID);
-		AddVote_Localization(ClientID, "null", "★ {str:psevdo}", "psevdo", LocalizeText(ClientID, "Clans"));		
+		AddVote_Localization(ClientID, "null", "★ {str:psevdo}", "psevdo", LocalizeText(ClientID, "Clans"));
 		AddVote_Localization(ClientID, "sort4", "☞ Top by Lеvel");
 		AddVote_Localization(ClientID, "sort5", "☞ Top by Gold");
 		AddVote_Localization(ClientID, "sort8", "☞ Top by Relevance");
 
 		AddBack(ClientID);
 		AddVote("", "null", ClientID);
-		
+
 		if(m_apPlayers[ClientID]->m_SortedSelectTop == 1)
 			Server()->ShowTop10(ClientID, "Level", 1);
 		else if(m_apPlayers[ClientID]->m_SortedSelectTop == 2)
@@ -3679,10 +3679,10 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 			Server()->ShowTop10(ClientID, "WinArea", 1);
 		else if(m_apPlayers[ClientID]->m_SortedSelectTop == 8)
 			Server()->ShowTop10Clans(ClientID, "Relevance", 1);
-			
+
 		return;
 	}
-	
+
 	// ############################### Инвентарь
 	else if(Type == INVENTORY)
 	{
@@ -3700,7 +3700,7 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		AddVote_Localization(ClientID, "its4", "☞ Used / Ticket ({int:got})", "got", &Counts);
 		Counts = Server()->GetItemCountType(ClientID, 3);
 		AddVote_Localization(ClientID, "its3", "☞ Quest / Other ({int:got})", "got", &Counts);
-		Counts = Server()->GetItemCountType(ClientID, 2);	
+		Counts = Server()->GetItemCountType(ClientID, 2);
 		AddVote_Localization(ClientID, "its2", "☞ Rare Artifacts ({int:got})", "got", &Counts);
 		Counts = Server()->GetItemCountType(ClientID, 1);
 		AddVote_Localization(ClientID, "its1", "☞ Weapons / Upgrades ({int:got})", "got", &Counts);
@@ -3709,9 +3709,9 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		if(m_apPlayers[ClientID]->m_SelectItemType == 1)
 			Server()->ListInventory(ClientID, 1);
 		else if(m_apPlayers[ClientID]->m_SelectItemType == 2)
-			Server()->ListInventory(ClientID, 2);	
+			Server()->ListInventory(ClientID, 2);
 		else if(m_apPlayers[ClientID]->m_SelectItemType == 3)
-			Server()->ListInventory(ClientID, 3);			
+			Server()->ListInventory(ClientID, 3);
 		else if(m_apPlayers[ClientID]->m_SelectItemType == 4)
 			Server()->ListInventory(ClientID, 4);
 		else if(m_apPlayers[ClientID]->m_SelectItemType == 5)
@@ -3721,11 +3721,11 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		// 1 - Weapon Upgradins, 2 - Rare Artifacts, 3 - Quest Item's, 4 - Useds Items, 5 - Crafted Item, 6 - Work item
 		return;
 	}
-	
+
 	// ############################### Донат меню
 	else if(Type == CDONATE)
 	{
-		m_apPlayers[ClientID]->m_LastVotelist = AUTH;	
+		m_apPlayers[ClientID]->m_LastVotelist = AUTH;
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
 		AddVote_Localization(ClientID, "null", "Donating & Privileges");
 		AddVote_Localization(ClientID, "null", "1 euro - 100 donate coin");
@@ -3745,52 +3745,52 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 		AddBack(ClientID);
 		return;
 	}
-	
+
 
 	// ############################### Инвентарь действие
 	else if(Type == SELITEM)
 	{
 		int SelectItem = m_apPlayers[ClientID]->m_SelectItem;
-		if(Server()->GetItemType(ClientID, SelectItem) == 15 || Server()->GetItemType(ClientID, SelectItem) == 16 
+		if(Server()->GetItemType(ClientID, SelectItem) == 15 || Server()->GetItemType(ClientID, SelectItem) == 16
 			|| Server()->GetItemType(ClientID, SelectItem) == 17)
 			m_apPlayers[ClientID]->m_LastVotelist = ARMORMENU;
-		else m_apPlayers[ClientID]->m_LastVotelist = INVENTORY;	
+		else m_apPlayers[ClientID]->m_LastVotelist = INVENTORY;
 
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
-		AddVote_Localization(ClientID, "null", Server()->GetItemDesc(ClientID, SelectItem));	
-		AddVote("", "null", ClientID);	
-		AddVote_Localization(ClientID, "null", "In reason, say the number");	
-		AddVote_Localization(ClientID, "null", "If in reason not number, use x1");	
-		AddVote("", "null", ClientID);	
+		AddVote_Localization(ClientID, "null", Server()->GetItemDesc(ClientID, SelectItem));
+		AddVote("", "null", ClientID);
+		AddVote_Localization(ClientID, "null", "In reason, say the number");
+		AddVote_Localization(ClientID, "null", "If in reason not number, use x1");
+		AddVote("", "null", ClientID);
 		AddVote_Localization(ClientID, "null", "▶ Selected item {str:name}", "name", Server()->GetItemName(ClientID, m_apPlayers[ClientID]->m_SelectItem));
-		
+
 		if(Server()->GetItemType(ClientID, SelectItem) == 4)
 			AddVote_Localization(ClientID, "useitem", "▹ Use item's");
-			
+
 		if(Server()->GetItemPrice(ClientID, SelectItem, 1) > 0 && m_apPlayers[ClientID]->GetWork())
 			AddVote_Localization(ClientID, "sellitem", "▹ Sell item's");
 
 		if(Server()->GetItemType(ClientID, SelectItem) != 6)
 			AddVote_Localization(ClientID, "dropitem", "▹ Drop item's");
-		
+
 		if(Server()->GetItemType(ClientID, SelectItem) == 15 || Server()->GetItemType(ClientID, SelectItem) == 16
 			|| Server()->GetItemType(ClientID, SelectItem) == 17)
 		{
-			AddVote("", "null", ClientID);	
-			AddVote_Localization(ClientID, "enchantitem", "▹ Enchant item (need 1000 material)");	
-			AddVote("", "null", ClientID);	
+			AddVote("", "null", ClientID);
+			AddVote_Localization(ClientID, "enchantitem", "▹ Enchant item (need 1000 material)");
+			AddVote("", "null", ClientID);
 		}
 		AddVote_Localization(ClientID, "destitem", "▹ Destroy item's");
 		AddBack(ClientID);
 		return;
 	}
-	
+
 	// ############################### Квесты меню
 	else if(Type == QUEST)
 	{
-		m_apPlayers[ClientID]->m_LastVotelist = AUTH;	
+		m_apPlayers[ClientID]->m_LastVotelist = AUTH;
 		if(m_apPlayers[ClientID]->GetCharacter() && m_apPlayers[ClientID]->GetCharacter()->InQuest())
-		{	
+		{
 			bool Trying = true;
 			AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
 			AddVote_Localization(ClientID, "null", "Quest Menu");
@@ -3818,10 +3818,10 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 				int Need = QUEST4, Counts = Server()->GetItemCount(ClientID, KWAHGANDON);
 				AddVote_Localization(ClientID, "null", "Kwah [Step 2] - Kill kwah and get head [{int:get}/{int:need}]", "get", &Counts, "need", &Need);
 				AddVote_Localization(ClientID, "null", "You got {str:got}", "got", "8000exp/550000Silver");
-			}	
+			}
 			else if(m_apPlayers[ClientID]->AccData.Quest == 5)
 			{
-				int Need = QUEST5; 
+				int Need = QUEST5;
 				int Counts = Server()->GetItemCount(ClientID, PIGPORNO);
 				int Counts2 = Server()->GetItemCount(ClientID, KWAHGANDON);
 				AddVote_Localization(ClientID, "null", "Pigs&Kwah's [Step 1] - Pig meat, Head Kwah [{int:get}/{int:need} & {int:get2}/{int:need2}]", "get", &Counts, "need", &Need, "get2", &Counts2, "need2", &Need);
@@ -3845,15 +3845,15 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 				AddVote_Localization(ClientID, "passquest", "- Pass Quest");
 		}
 		else AddVote_Localization(ClientID, "null", "You are not in the Quest Room");
-			
+
 		AddBack(ClientID);
 		return;
 	}
-	
+
 	// ############################### Крафтинг меню
 	else if(Type == CRAFTING)
 	{
-		m_apPlayers[ClientID]->m_LastVotelist = AUTH;	
+		m_apPlayers[ClientID]->m_LastVotelist = AUTH;
 		AddVote_Localization(ClientID, "null", "☪ Information ( ´ ω ` )?:");
 		AddVote_Localization(ClientID, "null", "Crafting Menu");
 		AddVote("", "null", ClientID);
@@ -3866,62 +3866,62 @@ void CGameContext::ResetVotes(int ClientID, int Type)
 
 		AddBack(ClientID);
 		AddVote("", "null", ClientID);
-		
+
 		if(m_apPlayers[ClientID]->GetCharacter() && m_apPlayers[ClientID]->GetCharacter()->InCrafted())
 		{
 			if(m_apPlayers[ClientID]->m_SortedSelectCraft == 1)
 			{
-				AddNewCraftVote(ClientID, "Skelet Bonex30", SKELETSSBONE);	
-				AddNewCraftVote(ClientID, "Zombie Eyex30", ZOMIBEBIGEYE);	
-				AddNewCraftVote(ClientID, "(Iron Ore, Copper Ore)x100", FORMULAEARRINGS);	
-				AddNewCraftVote(ClientID, "(Iron Ore, Copper Ore)x125", FORMULAFORRING);	
-				AddNewCraftVote(ClientID, "(Iron Ore, Copper Ore)x150", FORMULAWEAPON);	
-					
+				AddNewCraftVote(ClientID, "Skelet Bonex30", SKELETSSBONE);
+				AddNewCraftVote(ClientID, "Zombie Eyex30", ZOMIBEBIGEYE);
+				AddNewCraftVote(ClientID, "(Iron Ore, Copper Ore)x100", FORMULAEARRINGS);
+				AddNewCraftVote(ClientID, "(Iron Ore, Copper Ore)x125", FORMULAFORRING);
+				AddNewCraftVote(ClientID, "(Iron Ore, Copper Ore)x150", FORMULAWEAPON);
+
 			}
 			else if(m_apPlayers[ClientID]->m_SortedSelectCraft == 2)
 			{
 				if(g_Config.m_SvEventSummer)
-					AddNewCraftVote(ClientID, "Sun Rayx20", SHEALSUMMER);	
+					AddNewCraftVote(ClientID, "Sun Rayx20", SHEALSUMMER);
 
-				AddNewCraftVote(ClientID, "Formula Ring's, Slime Dirt", RARERINGSLIME);	
-				AddNewCraftVote(ClientID, "Formula Ring's, Body Boomer x100", RINGBOOMER);	
-				AddNewCraftVote(ClientID, "Formula Earring's, Foot Kwah x 100", EARRINGSKWAH);	
-				AddNewCraftVote(ClientID, "(Zombie Big Eye Skelet Fortified Bone)x30", CUSTOMSKIN);	
-				AddNewCraftVote(ClientID, "(Potate, Tomate, Carrot)x60", JUMPIMPULS);		
+				AddNewCraftVote(ClientID, "Formula Ring's, Slime Dirt", RARERINGSLIME);
+				AddNewCraftVote(ClientID, "Formula Ring's, Body Boomer x100", RINGBOOMER);
+				AddNewCraftVote(ClientID, "Formula Earring's, Foot Kwah x 100", EARRINGSKWAH);
+				AddNewCraftVote(ClientID, "(Zombie Big Eye Skelet Fortified Bone)x30", CUSTOMSKIN);
+				AddNewCraftVote(ClientID, "(Potate, Tomate, Carrot)x60", JUMPIMPULS);
 			}
 			else if(m_apPlayers[ClientID]->m_SortedSelectCraft == 3)
 			{
-				AddNewCraftVote(ClientID, "Module (happy, evil, surprise, blink, pain)", MODULEEMOTE);	
-				AddNewCraftVote(ClientID, "Weapon (gun, shotgun, grenade, laser)", WEAPONPRESSED);	
-				AddNewCraftVote(ClientID, "Formula Weapons, Ring Boomer", MODULESHOTGUNSLIME);	
-				AddNewCraftVote(ClientID, "Formula Weapons x25", ENDEXPLOSION);	
+				AddNewCraftVote(ClientID, "Module (happy, evil, surprise, blink, pain)", MODULEEMOTE);
+				AddNewCraftVote(ClientID, "Weapon (gun, shotgun, grenade, laser)", WEAPONPRESSED);
+				AddNewCraftVote(ClientID, "Formula Weapons, Ring Boomer", MODULESHOTGUNSLIME);
+				AddNewCraftVote(ClientID, "Formula Weapons x25", ENDEXPLOSION);
 			}
 			else if(m_apPlayers[ClientID]->m_SortedSelectCraft == 4)
 			{
-				
+
 			}
 			else if(m_apPlayers[ClientID]->m_SortedSelectCraft == 5)
 			{
-				AddNewCraftVote(ClientID, "Woodx30, Cooper Orex60", COOPERPIX);		
-				AddNewCraftVote(ClientID, "Woodx40, Iron Orex60", IRONPIX);		
-				AddNewCraftVote(ClientID, "Woodx50, Gold Orex80", GOLDPIX);		
-				AddNewCraftVote(ClientID, "Woodx50, Diamond Orex100", DIAMONDPIX);					
+				AddNewCraftVote(ClientID, "Woodx30, Cooper Orex60", COOPERPIX);
+				AddNewCraftVote(ClientID, "Woodx40, Iron Orex60", IRONPIX);
+				AddNewCraftVote(ClientID, "Woodx50, Gold Orex80", GOLDPIX);
+				AddNewCraftVote(ClientID, "Woodx50, Diamond Orex100", DIAMONDPIX);
 			}
 			else if(m_apPlayers[ClientID]->m_SortedSelectCraft == 6)
 			{
-				AddNewCraftVote(ClientID, "Leatherx50, Woodx150", LEATHERBODY);		
+				AddNewCraftVote(ClientID, "Leatherx50, Woodx150", LEATHERBODY);
 				AddNewCraftVote(ClientID, "Leatherx40, Woodx120", LEATHERFEET);
-				AddNewCraftVote(ClientID, "Cooper Orex500, Woodx150", COOPERBODY);		
+				AddNewCraftVote(ClientID, "Cooper Orex500, Woodx150", COOPERBODY);
 				AddNewCraftVote(ClientID, "Cooper Orex400, Woodx120", COOPERFEET);
-				AddNewCraftVote(ClientID, "Iron Orex500, Woodx150", IRONBODY);		
+				AddNewCraftVote(ClientID, "Iron Orex500, Woodx150", IRONBODY);
 				AddNewCraftVote(ClientID, "Iron Orex400, Woodx120", IRONFEET);
-				AddNewCraftVote(ClientID, "Gold Orex500, Woodx150", GOLDBODY);		
+				AddNewCraftVote(ClientID, "Gold Orex500, Woodx150", GOLDBODY);
 				AddNewCraftVote(ClientID, "Gold Orex400, Woodx120", GOLDFEET);
-				AddNewCraftVote(ClientID, "Diamond Orex500, Woodx150", DIAMONDBODY);		
+				AddNewCraftVote(ClientID, "Diamond Orex500, Woodx150", DIAMONDBODY);
 				AddNewCraftVote(ClientID, "Diamond Orex400, Woodx120", DIAMONDFEET);
-				AddNewCraftVote(ClientID, "Dragon Orex500, Woodx150", DRAGONBODY);		
+				AddNewCraftVote(ClientID, "Dragon Orex500, Woodx150", DRAGONBODY);
 				AddNewCraftVote(ClientID, "Dragon Orex400, Woodx120", DRAGONFEET);
-				AddNewCraftVote(ClientID, "Cooper Orex100, Iron Orex10", STCLASIC);						
+				AddNewCraftVote(ClientID, "Cooper Orex100, Iron Orex10", STCLASIC);
 			}
 		}
 		else AddVote_Localization(ClientID, "null", "You are not in the Craft Room");
@@ -3936,12 +3936,12 @@ void CGameContext::AddNewCraftVote(int ClientID, const char *Need, int ItemID)
 	AddVote_Localization(ClientID, "null", "Need: {str:need}", "need", Need);
 	AddVote_Localization(ClientID, "null", "Desc {str:desc}", "desc", Server()->GetItemDesc(ClientID, ItemID));
 	AddVoteMenu_Localization(ClientID, ItemID, CRAFTONLY, "- Crafting {str:name}", "name", Server()->GetItemName(ClientID, ItemID));
-	AddVote("--------------------", "null", ClientID);		
-	return;	
+	AddVote("--------------------", "null", ClientID);
+	return;
 }
 
 void CGameContext::AddBack(int ClientID)
-{	
+{
 	AddVote("", "null", ClientID);
 	AddVote_Localization(ClientID, "back", "- Backpage");
 }
@@ -3959,11 +3959,11 @@ void CGameContext::CreateNewShop(int ClientID, int ItemID, int Type, int Level, 
 	switch(Type)
 	{
 		case 2:
-		{	
+		{
 			Server()->SetItemPrice(ClientID, ItemID, Level, Price);
 			int PriceNow = Server()->GetItemPrice(ClientID, ItemID, 1);
-			
-			int Count = Server()->GetItemCount(ClientID, ItemID);	
+
+			int Count = Server()->GetItemCount(ClientID, ItemID);
 			AddVoteMenu_Localization(ClientID, ItemID, BUYITEMONLY, "({int:al}) (Lv:{int:need}) {str:itemname} [{int:price} Gold]", "al", &Count, "need", &Level, "itemname", Server()->GetItemName(ClientID, ItemID), "price", &PriceNow);
 		} break;
 		case 3:
@@ -3971,8 +3971,8 @@ void CGameContext::CreateNewShop(int ClientID, int ItemID, int Type, int Level, 
 			Server()->SetItemPrice(ClientID, ItemID, Level, Price);
 			int PriceNow = Server()->GetItemPrice(ClientID, ItemID, 1);
 
-			const char* laserd = Server()->GetItemCount(ClientID, ItemID) ? "✔" : "x";				
-			AddVoteMenu_Localization(ClientID, ItemID, BUYITEMONLY, "({str:al}) (Lv:{int:need}) {str:itemname} [{int:price} Gold]", "al", laserd, "need", &Level, "itemname", Server()->GetItemName(ClientID, ItemID), "price", &PriceNow);	
+			const char* laserd = Server()->GetItemCount(ClientID, ItemID) ? "✔" : "x";
+			AddVoteMenu_Localization(ClientID, ItemID, BUYITEMONLY, "({str:al}) (Lv:{int:need}) {str:itemname} [{int:price} Gold]", "al", laserd, "need", &Level, "itemname", Server()->GetItemName(ClientID, ItemID), "price", &PriceNow);
 		} break;
 		default:
 		{
@@ -3991,7 +3991,7 @@ void CGameContext::CreateNewShop(int ClientID, int ItemID, int Type, int Level, 
 int CGameContext::GetAreaCount()
 {
 	int Count = 0;
-	for(int i = 0; i < MAX_NOBOT; ++i)
+	for(int i = 0; i < MAX_PLAYERS; ++i)
 	{
 		if(m_apPlayers[i] && m_apPlayers[i]->m_InArea)
 			Count++;
@@ -4000,7 +4000,7 @@ int CGameContext::GetAreaCount()
 }
 
 void CGameContext::StartArea(int WaitTime, int Type)
-{		
+{
 	m_AreaStartTick = Server()->TickSpeed()*WaitTime;
 	m_AreaType = Type;
 
@@ -4018,16 +4018,16 @@ void CGameContext::StartArea(int WaitTime, int Type)
 }
 
 void CGameContext::EnterArea(int ClientID)
-{	
+{
 	if(!m_apPlayers[ClientID] || !m_apPlayers[ClientID]->GetCharacter())
 		return;
-		
+
 	if(m_apPlayers[ClientID]->m_JailTick || m_apPlayers[ClientID]->m_Search)
 		return 	SendBroadcast_Localization(ClientID, 250, 150, _("You are wanted. No enter in area room."));
-		
+
 	if(!m_AreaStartTick)
 		return 	SendBroadcast_Localization(ClientID, 250, 150, _("Survial not registration wait registration"));
-			
+
 	m_apPlayers[ClientID]->m_InArea = true;
 	m_apPlayers[ClientID]->GetCharacter()->Die(ClientID, WEAPON_WORLD);
 }
@@ -4040,13 +4040,13 @@ void CGameContext::AddVote(const char *Desc, const char *Cmd, int ClientID)
 	if(ClientID == -2)
 		return;
 
-	CVoteOptions Vote;	
+	CVoteOptions Vote;
 	str_copy(Vote.m_aDescription, Desc, sizeof(Vote.m_aDescription));
 	str_copy(Vote.m_aCommand, Cmd, sizeof(Vote.m_aCommand));
 	m_PlayerVotes[ClientID].add(Vote);
-	
+
 	// inform clients about added option
-	CNetMsg_Sv_VoteOptionAdd OptionMsg;	
+	CNetMsg_Sv_VoteOptionAdd OptionMsg;
 	OptionMsg.m_pDescription = Vote.m_aDescription;
 	Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, ClientID);
 }
@@ -4067,7 +4067,7 @@ bool CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *p
 }
 
 bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
-{	
+{
 	bool ArgumentFound = false;
 	const char* pArgumentIter = pStr;
 	while(*pArgumentIter)
@@ -4079,7 +4079,7 @@ bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
 		}
 		pArgumentIter++;
 	}
-	
+
 	if(!ArgumentFound)
 	{
 		SendChatTarget(ClientID, "Usage: /msg <username or group> <message>");
@@ -4087,16 +4087,16 @@ bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
 		SendChatTarget(ClientID, "Available groups: #clan");
 		return true;
 	}
-	
+
 	dynamic_string FinalMessage;
 	int TextIter = 0;
-	
+
 	int CheckID = -1;
 	int CheckClan = -1;
-	
+
 	char aNameFound[32];
 	aNameFound[0] = 0;
-	
+
 	char aChatTitle[32];
 	aChatTitle[0] = 0;
 	unsigned int c = 0;
@@ -4114,7 +4114,7 @@ bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
 			}
 			else
 			{
-				for(int i=0; i<MAX_NOBOT; i++)
+				for(int i = 0; i < MAX_PLAYERS; i++)
 				{
 					if(m_apPlayers[i] && str_comp(Server()->ClientName(i), aNameFound) == 0)
 					{
@@ -4125,7 +4125,7 @@ bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
 				}
 			}
 		}
-		
+
 		if(aChatTitle[0] || pStr[c] == 0)
 		{
 			aNameFound[c] = 0;
@@ -4136,27 +4136,27 @@ bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
 			aNameFound[c] = pStr[c];
 			aNameFound[c+1] = 0;
 		}
-	}	
+	}
 	if(!aChatTitle[0])
 	{
 		SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("No player was found with this name"));
 		return true;
 	}
-	
+
 	pStr += c;
 	while(*pStr == ' ')
 		pStr++;
-	
+
 	dynamic_string Buffer;
 	Buffer.copy(pStr);
 	Server()->Localization()->ArabicShaping(Buffer);
-	
+
 	CNetMsg_Sv_Chat Msg;
 	Msg.m_Team = (TeamChat ? 1 : 0);
 	Msg.m_ClientID = ClientID;
-	
+
 	int NumPlayerFound = 0;
-	for(int i=0; i<MAX_NOBOT; i++)
+	for(int i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(m_apPlayers[i])
 		{
@@ -4164,11 +4164,11 @@ bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
 			{
 				if(CheckID >= 0 && !(i == CheckID))
 					continue;
-				
+
 				if(CheckClan >= 0 && !(Server()->GetClanID(i) == CheckClan))
 					continue;
 			}
-			
+
 			FinalMessage.clear();
 			TextIter = 0;
 			if(i == ClientID)
@@ -4197,9 +4197,9 @@ bool CGameContext::PrivateMessage(const char* pStr, int ClientID, bool TeamChat)
 				TextIter = FinalMessage.append_at(TextIter, Buffer.buffer());
 			}
 			Msg.m_pMessage = FinalMessage.buffer();
-	
+
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
-				
+
 			NumPlayerFound++;
 		}
 	}
@@ -4258,7 +4258,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 
 	m_Layers.Init(Kernel());
 	m_Collision.Init(&m_Layers);
-	
+
 	//Get zones
 	m_ZoneHandle_Damage = m_Collision.GetZoneHandle("icDamage");
 	m_ZoneHandle_Teleport = m_Collision.GetZoneHandle("icTele");
@@ -4271,7 +4271,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	if(m_Layers.EntityGroup())
 	{
 		char aLayerName[12];
-		
+
 		const CMapItemGroup* pGroup = m_Layers.EntityGroup();
 		for(int l = 0; l < pGroup->m_NumLayers; l++)
 		{
@@ -4403,7 +4403,7 @@ void CGameContext::UpdateStat(int ClientID) //update stat mysql pdata
 void CGameContext::UpdateStats(int ClientID)
 {
 	UpdateStat(ClientID);
-	Server()->UpdateStats(ClientID);	
+	Server()->UpdateStats(ClientID);
 }
 
 void CGameContext::GetUpgrade(int ClientID) //set stat mysql pdata
@@ -4441,7 +4441,7 @@ void CGameContext::UpdateUpgrade(int ClientID) //update stat mysql pdata
 void CGameContext::UpdateUpgrades(int ClientID)
 {
 	UpdateUpgrade(ClientID);
-	Server()->UpdateStats(ClientID, 1);	
+	Server()->UpdateStats(ClientID, 1);
 }
 
 void CGameContext::OnPreSnap() {}
@@ -4507,7 +4507,7 @@ void CGameContext::UpdateBotInfo(int ClientID)
 		else if(BotSubType == 1) str_copy(NameSkin, "twinbop", sizeof(NameSkin));
 		else str_copy(NameSkin, "coala", sizeof(NameSkin));
 	}
-	
+
     Server()->ResetBotInfo(ClientID, BotType, BotSubType);
     str_copy(m_apPlayers[ClientID]->m_TeeInfos.m_SkinName, NameSkin, sizeof(m_apPlayers[ClientID]->m_TeeInfos.m_SkinName));
     m_apPlayers[ClientID]->m_TeeInfos.m_UseCustomColor = false;
@@ -4516,26 +4516,26 @@ void CGameContext::UpdateBotInfo(int ClientID)
 
 void CGameContext::CreateBot(int ClientID, int BotType, int BotSubType)
 {
-    int BotClientID = g_Config.m_SvMaxClients-MAX_BOTS+ClientID;
+    int BotClientID = MAX_PLAYERS + ClientID;
     if (m_apPlayers[BotClientID])
 		return;
 
 	m_apPlayers[BotClientID] = new(BotClientID) CPlayer(this, BotClientID, TEAM_RED);
 	m_apPlayers[BotClientID]->SetBotType(BotType);
 	m_apPlayers[BotClientID]->SetBotSubType(BotSubType);
-	
+
 	Server()->InitClientBot(BotClientID);
 }
 
 void CGameContext::DeleteBotBoss() { Server()->Kick(BOSSID, "pizdyi"); }
 
 void CGameContext::SendChatClan(int ClanID, const char* pText, ...)
-{	
+{
 	dynamic_string Buffer;
-	
+
 	va_list VarArgs;
 	va_start(VarArgs, pText);
-	
+
 	CNetMsg_Sv_Chat Msg;
 	Msg.m_Team = 0;
 	Msg.m_ClientID = -1;
@@ -4543,10 +4543,10 @@ void CGameContext::SendChatClan(int ClanID, const char* pText, ...)
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_apPlayers[i] && Server()->GetClanID(i) && Server()->GetClanID(i) == ClanID)
-		{	
+		{
 			Buffer.clear();
 			Server()->Localization()->Format_VL(Buffer, m_apPlayers[i]->GetLanguage(), pText, VarArgs);
-			
+
 			Msg.m_pMessage = Buffer.buffer();
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
 		}
@@ -4555,7 +4555,7 @@ void CGameContext::SendChatClan(int ClanID, const char* pText, ...)
 	va_end(VarArgs);
 }
 
-const char* CGameContext::LevelString(int max, int value, int step, char ch1, char ch2) 
+const char* CGameContext::LevelString(int max, int value, int step, char ch1, char ch2)
 {
     if (value < 0) value = 0;
     if (value > max) value = max;
@@ -4570,12 +4570,12 @@ const char* CGameContext::LevelString(int max, int value, int step, char ch1, ch
     int b = (max - value) / step;
     int i = 1;
 
-    for (int ai = 0; ai < a; ai++, i++) 
+    for (int ai = 0; ai < a; ai++, i++)
     {
         Buf[i] = ch1;
     }
 
-    for (int bi = 0; bi < b || i < size - 2; bi++, i++) 
+    for (int bi = 0; bi < b || i < size - 2; bi++, i++)
     {
         Buf[i] = ch2;
     }
@@ -4610,9 +4610,9 @@ void CGameContext::UseItem(int ClientID, int ItemID, int Count, int Type)
 					int GetGold = PackOne/10000;
 					int GetSilv = PackOne - GetGold*10000;
 
-					SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get Gold {int:pvar} Silver {int:pvars}"), 
-						"name", Server()->ClientName(ClientID), "used", Server()->GetItemName(ClientID, ItemID, false), "num", &Count, "pvar", &GetGold, "pvars", &GetSilv , NULL);	
-				
+					SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get Gold {int:pvar} Silver {int:pvars}"),
+						"name", Server()->ClientName(ClientID), "used", Server()->GetItemName(ClientID, ItemID, false), "num", &Count, "pvar", &GetGold, "pvars", &GetSilv , NULL);
+
 					pPlayer->MoneyAdd(PackOne);
 				}
 			}
@@ -4621,9 +4621,9 @@ void CGameContext::UseItem(int ClientID, int ItemID, int Count, int Type)
 				PackOne += 15;
 				if(i == Count-1)
 				{
-					SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get {int:pvars} exp"), 
-						"name", Server()->ClientName(ClientID), "used", Server()->GetItemName(ClientID, ItemID, false), "num", &Count, "pvars", &PackOne , NULL);	
-				
+					SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get {int:pvars} exp"),
+						"name", Server()->ClientName(ClientID), "used", Server()->GetItemName(ClientID, ItemID, false), "num", &Count, "pvars", &PackOne , NULL);
+
 					pPlayer->ExpAdd(PackOne, false);
 				}
 			}
@@ -4632,9 +4632,9 @@ void CGameContext::UseItem(int ClientID, int ItemID, int Count, int Type)
 				PackOne += 25;
 				if(i == Count-1)
 				{
-					SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get {int:pvars} exp"), 
-						"name", Server()->ClientName(ClientID), "used", Server()->GetItemName(ClientID, ItemID, false), "num", &Count, "pvars", &PackOne , NULL);	
-				
+					SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get {int:pvars} exp"),
+						"name", Server()->ClientName(ClientID), "used", Server()->GetItemName(ClientID, ItemID, false), "num", &Count, "pvars", &PackOne , NULL);
+
 					pPlayer->ExpAdd(PackOne, false);
 				}
 			}
@@ -4643,9 +4643,9 @@ void CGameContext::UseItem(int ClientID, int ItemID, int Count, int Type)
 				PackOne += 10;
 				if(i == Count-1)
 				{
-					SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get {int:pvars} exp"), 
-						"name", Server()->ClientName(ClientID), "used", Server()->GetItemName(ClientID, ItemID, false), "num", &Count, "pvars", &PackOne , NULL);	
-				
+					SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:used} x{int:num} and get {int:pvars} exp"),
+						"name", Server()->ClientName(ClientID), "used", Server()->GetItemName(ClientID, ItemID, false), "num", &Count, "pvars", &PackOne , NULL);
+
 					pPlayer->ExpAdd(PackOne, false);
 				}
 			}
@@ -4660,36 +4660,36 @@ void CGameContext::UseItem(int ClientID, int ItemID, int Count, int Type)
 				}
 			}
 			else if(ItemID == CLANTICKET)
-			{		
-				SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Use: /newclan <nameclan>"), NULL);	
+			{
+				SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("Use: /newclan <nameclan>"), NULL);
 				break;
 			}
 			else if(ItemID == RESETINGSKILL)
-			{		
+			{
 				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:items}x{int:num}"), "name", Server()->ClientName(ClientID), "items", Server()->GetItemName(ClientID, ItemID, false), "num", &Count, NULL);
 				m_apPlayers[ClientID]->ResetSkill(ClientID);
 			}
 			else if(ItemID ==  RESETINGUPGRADE)
-			{		
+			{
 				SendChatTarget_Localization(-1, CHATCATEGORY_DEFAULT, _("{str:name} used {str:items}x{int:num}"), "name", Server()->ClientName(ClientID), "items", Server()->GetItemName(ClientID, ItemID, false), "num", &Count, NULL);
 				m_apPlayers[ClientID]->ResetUpgrade(ClientID);
 			}
 			else if(ItemID ==  BOOKEXPMIN)
-			{		
+			{
 				if(i == Count-1)
 					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You used items {str:items}x{int:num}"), "items", Server()->GetItemName(ClientID, ItemID), "num", &Count, NULL);
-			
+
 				m_apPlayers[ClientID]->m_ExperienceAdd += 600*Server()->TickSpeed();
 			}
 			else if(ItemID ==  BOOKMONEYMIN)
-			{		
+			{
 				if(i == Count-1)
 					SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You used items {str:items}x{int:num}"), "items", Server()->GetItemName(ClientID, ItemID), "num", &Count, NULL);
-				
+
 				m_apPlayers[ClientID]->m_MoneyAdd += 600*Server()->TickSpeed();
 			}
 			else if(ItemID ==  SKILLUPBOX)
-			{		
+			{
 				m_apPlayers[ClientID]->AccUpgrade.Upgrade += 20;
 				m_apPlayers[ClientID]->AccUpgrade.SkillPoint += 10;
 				if(i == Count-1)
@@ -4698,7 +4698,7 @@ void CGameContext::UseItem(int ClientID, int ItemID, int Count, int Type)
 				UpdateUpgrades(ClientID);
 			}
 			else if(ItemID == VIPPACKAGE)
-			{		
+			{
 				Count = 1;
 				SendMail(ClientID, "You buying VIP your bonus!", SKILLUPBOX, 1);
 				SendMail(ClientID, "You buying VIP your bonus!", SANTIPVP, 1);
@@ -4715,7 +4715,7 @@ void CGameContext::UseItem(int ClientID, int ItemID, int Count, int Type)
 				m_apPlayers[ClientID]->m_OpenBoxType = ItemID;
 				break;
 			}
-			else 
+			else
 				break;
 		}
 		dbg_msg("used", "%s use item %s:%d (count: %d)", Server()->ClientName(ClientID), Server()->GetItemName(ClientID, ItemID, false), ItemID, Count);
@@ -4726,10 +4726,10 @@ void CGameContext::UseItem(int ClientID, int ItemID, int Count, int Type)
 		int NeedMoney = (int)(Server()->GetItemPrice(ClientID, ItemID, 1)/2);
 		NeedMoney = NeedMoney*Count;
 		pPlayer->AccData.Gold += NeedMoney;
-		
-		SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You sell item's {str:name}x{int:count}"), "name", Server()->GetItemName(ClientID, ItemID), "count", &Count, NULL);							
-		SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You got {int:count} golds"), "count", &NeedMoney, NULL);							
-		
+
+		SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You sell item's {str:name}x{int:count}"), "name", Server()->GetItemName(ClientID, ItemID), "count", &Count, NULL);
+		SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You got {int:count} golds"), "count", &NeedMoney, NULL);
+
 		if(!Server()->GetItemCount(ClientID, ItemID))
 		{
 			switch(ItemID)
@@ -4746,11 +4746,11 @@ void CGameContext::UseItem(int ClientID, int ItemID, int Count, int Type)
 
 		UpdateStats(ClientID);
 		ResetVotes(ClientID, AUTH);
-		return;	
+		return;
 	}
 	if(Type == USEDDROP)
 	{
-		int ClinID = -1;	
+		int ClinID = -1;
 		if(ItemID == RANDOMCRAFTITEM || ItemID == POTATO || ItemID == TOMATE || ItemID == CARROT)
 			ClinID = ClientID;
 
@@ -4770,7 +4770,7 @@ void CGameContext::UseItem(int ClientID, int ItemID, int Count, int Type)
 		m_apPlayers[ClientID]->GetCharacter()->CreateDropItem(ItemID, Count, ClinID);
 
 		dbg_msg("drop", "%s drop item %s:%d (count: %d)", Server()->ClientName(ClientID), Server()->GetItemName(ClientID, ItemID, false), ItemID, Count);
-		SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You drop items {str:items}x{int:counts}"), "items", Server()->GetItemName(ClientID, ItemID), "counts", &Count, NULL);				
+		SendChatTarget_Localization(ClientID, CHATCATEGORY_DEFAULT, _("You drop items {str:items}x{int:counts}"), "items", Server()->GetItemName(ClientID, ItemID), "counts", &Count, NULL);
 		return;
 	}
 	return;
@@ -4778,22 +4778,22 @@ void CGameContext::UseItem(int ClientID, int ItemID, int Count, int Type)
 
 /* Босс все функции */
 void CGameContext::StartBoss(int ClientID, int WaitTime, int BossType)
-{	
+{
 	if(!m_apPlayers[ClientID] || !m_apPlayers[ClientID]->GetCharacter())
 		return;
 
 	if(m_apPlayers[ClientID]->m_JailTick || m_apPlayers[ClientID]->m_Search)
 		return 	SendBroadcast_Localization(ClientID, 250, 150, _("You are wanted. Not enter in boss room."));
-		
+
 	if(m_BossStartTick || m_BossStart)
 		return 	SendBroadcast_Localization(ClientID, 250, 150, _("Already active raid in boss room. Enter in room."));
-	
+
 	if (!m_apPlayers[BOSSID])
 	{
 		m_apPlayers[BOSSID] = new(BOSSID) CPlayer(this, BOSSID, TEAM_RED);
 		m_apPlayers[BOSSID]->SetBotType(BossType);
 		m_apPlayers[BOSSID]->SetBotSubType(g_Config.m_SvCityStart);
-		
+
 		Server()->InitClientBot(BOSSID);
 	}
 	else
@@ -4802,10 +4802,10 @@ void CGameContext::StartBoss(int ClientID, int WaitTime, int BossType)
 		DeleteBotBoss();
 		return;
 	}
-			
+
 	m_BossStartTick = Server()->TickSpeed()*WaitTime;
 	m_BossType = BossType;
-	
+
 	m_apPlayers[ClientID]->m_InBossed = true;
 	m_apPlayers[ClientID]->GetCharacter()->Die(ClientID, WEAPON_WORLD);
 
@@ -4816,28 +4816,28 @@ void CGameContext::StartBoss(int ClientID, int WaitTime, int BossType)
 }
 
 void CGameContext::EnterBoss(int ClientID, int BossType)
-{	
+{
 	if(!m_apPlayers[ClientID] || !m_apPlayers[ClientID]->GetCharacter())
 		return;
-		
+
 	if(m_apPlayers[ClientID]->m_JailTick || m_apPlayers[ClientID]->m_Search)
 		return 	SendBroadcast_Localization(ClientID, 250, 150, _("You are wanted. Not enter in boss room."));
-		
+
 	if(!m_BossStartTick && m_BossStart)
 		return 	SendBroadcast_Localization(ClientID, 250, 150, _("Raid in boss active. Wait and create."));
-			
+
 	if(!m_BossStartTick && !m_BossStart)
 		return 	SendBroadcast_Localization(ClientID, 250, 150, _("Need create request."));
 
-	m_apPlayers[ClientID]->m_InBossed = true;	
+	m_apPlayers[ClientID]->m_InBossed = true;
 	if(Server()->GetClanID(ClientID) > 0)
 	{
-		for(int i = 0; i < MAX_NOBOT; ++i)
+		for(int i = 0; i < MAX_PLAYERS; ++i)
 		{
 			if(i != ClientID && m_apPlayers[i] && m_apPlayers[i]->m_InBossed)
 			{
 				int Get = m_apPlayers[i]->AccData.Level*6;
-				SendChatTarget_Localization(i, CHATCATEGORY_DEFAULT, _("[Clan] Relevance added +{int:count}"), "count", &Get, NULL);			
+				SendChatTarget_Localization(i, CHATCATEGORY_DEFAULT, _("[Clan] Relevance added +{int:count}"), "count", &Get, NULL);
 				Server()->InitClanID(Server()->GetClanID(ClientID), PLUS, "Relevance", Get, true);
 			}
 		}
@@ -4848,7 +4848,7 @@ void CGameContext::EnterBoss(int ClientID, int BossType)
 int CGameContext::GetBossLeveling()
 {
 	int Count = 0;
-	for(int i = 0; i < MAX_NOBOT; ++i)
+	for(int i = 0; i < MAX_PLAYERS; ++i)
 	{
 		if(m_apPlayers[i] && m_apPlayers[i]->m_InBossed)
 			Count += m_apPlayers[i]->AccData.Level;
@@ -4859,7 +4859,7 @@ int CGameContext::GetBossLeveling()
 int CGameContext::GetBossCount()
 {
 	int Count = 0;
-	for(int i = 0; i < MAX_NOBOT; ++i)
+	for(int i = 0; i < MAX_PLAYERS; ++i)
 	{
 		if(m_apPlayers[i] && m_apPlayers[i]->m_InBossed)
 			Count++;
