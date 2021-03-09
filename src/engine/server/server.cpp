@@ -4052,7 +4052,7 @@ void CServer::Login(int ClientID, const char* pUsername, const char* pPassword)
 
 	char aHash[64]; //Result
 	mem_zero(aHash, sizeof(aHash));
-	Crypt(pPassword, (const unsigned char*) "d9", 1, 16, aHash);
+	Crypt(pPassword, (const unsigned char*) "d9", aHash);
 
 	CSqlJob* pJob = new CSqlJob_Server_Login(this, ClientID, pUsername, aHash);
 	m_aClients[ClientID].m_LogInstance = pJob->GetInstance();
@@ -4237,7 +4237,7 @@ inline void CServer::Register(int ClientID, const char* pUsername, const char* p
 		return;
 
 	char aHash[64];
-	Crypt(pPassword, (const unsigned char*) "d9", 1, 16, aHash);
+	Crypt(pPassword, (const unsigned char*) "d9", aHash);
 
 	CSqlJob* pJob = new CSqlJob_Server_Register(this, ClientID, pUsername, aHash, pEmail);
 	m_aClients[ClientID].m_LogInstance = pJob->GetInstance();
